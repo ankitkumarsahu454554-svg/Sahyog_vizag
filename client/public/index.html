@@ -44,8 +44,15 @@
 
   <!-- Icons, Maps & Charts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Dual CDN for Leaflet with automatic fallback -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script>
+    if (typeof L === 'undefined') {
+      document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
   <style>
@@ -74,7 +81,47 @@
       color: #EA580C;
     }
     #miniMap { height: 190px; width: 100%; border-radius: 0.75rem; }
-    #liveOverviewMap { height: 350px; width: 100%; border-radius: 0.75rem; }
+    #liveOverviewMap {
+      height: 400px;
+      width: 100%;
+      border-radius: 1rem;
+      position: relative;
+      z-index: 1;
+      background: #f1f5f9;
+    }
+
+    /* Core Leaflet Fallback Styles to guarantee map rendering */
+    .leaflet-container {
+      position: relative;
+      overflow: hidden;
+      outline: 0;
+      font-family: inherit;
+      background: #f8fafc;
+    }
+    .leaflet-pane, .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow,
+    .leaflet-tile-container, .leaflet-pane > svg, .leaflet-pane > canvas,
+    .leaflet-zoom-box, .leaflet-image-layer, .leaflet-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    .leaflet-tile-container { pointer-events: none; }
+    .leaflet-tile { user-select: none; -webkit-user-select: none; }
+    .leaflet-tile-loaded { opacity: 1; }
+    .leaflet-overlay-pane { z-index: 400; }
+    .leaflet-shadow-pane { z-index: 500; }
+    .leaflet-marker-pane { z-index: 600; }
+    .leaflet-tooltip-pane { z-index: 650; }
+    .leaflet-popup-pane { z-index: 700; }
+    .leaflet-control { position: relative; z-index: 800; pointer-events: auto; }
+    .leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; pointer-events: none; }
+    .leaflet-top { top: 0; }
+    .leaflet-right { right: 0; }
+    .leaflet-bottom { bottom: 0; }
+    .leaflet-left { left: 0; }
+    .leaflet-control-zoom { margin: 12px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .leaflet-control-zoom a { width: 32px; height: 32px; line-height: 32px; text-align: center; background: #fff; color: #1e293b; display: block; font-weight: bold; font-size: 16px; border-bottom: 1px solid #e2e8f0; text-decoration: none; }
+    .leaflet-control-zoom a:hover { background: #f1f5f9; }
 
     .mic-recording-pulse {
       animation: mic-wave 1.2s ease-in-out infinite;
@@ -103,25 +150,6 @@
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans antialiased selection:bg-orange-500 selection:text-white pb-20 md:pb-6">
-
-  <!-- ===================================================================== -->
-  <!-- 1. PERSISTENT TOP STATUS & ANTIGRAVITY ENGINE BANNER -->
-  <!-- ===================================================================== -->
-  <div id="modeBanner" class="bg-slate-900 text-slate-200 text-xs py-1.5 px-4 text-center border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto">
-    <div class="flex items-center gap-2 shrink-0">
-      <span id="modeIcon" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span id="modeText" class="font-medium">Connecting to SahyogAI Backend...</span>
-    </div>
-    <div class="flex items-center gap-3 shrink-0">
-      <button onclick="openAntigravityModal()" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold px-2.5 py-0.5 rounded-full text-[11px] shadow-sm hover:scale-105 transition">
-        <i class="fa-solid fa-bolt"></i>
-        <span>Antigravity AI Engine v2.5</span>
-      </button>
-      <span class="text-[11px] text-slate-400 hidden sm:inline" id="offlineSyncStatus">
-        <i class="fa-solid fa-cloud-arrow-up text-emerald-400 mr-1"></i>Offline Vault Ready
-      </span>
-    </div>
-  </div>
 
   <!-- DIRECT EMERGENCY SPEED DIAL BAR (PINNED FOR IMMEDIATE RESCUE CALLS) -->
   <div class="bg-red-950 text-white text-xs px-3 sm:px-4 py-2 border-b border-red-900 shadow-md">
@@ -335,30 +363,77 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Leaflet Map Container -->
         <div class="lg:col-span-2 bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+              <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2">
                 <i class="fa-solid fa-map-location-dot text-orange-600"></i>
                 <span data-i18n="map_title">Visakhapatnam Incident & Hospital Sector Map</span>
               </h3>
               <p class="text-xs text-slate-500" data-i18n="map_subtitle">Live geographic distribution of SOS calls & 10 emergency hospitals across Vizag coast</p>
             </div>
-            <button onclick="recenterVizagMap()" class="text-xs font-semibold px-2.5 py-1 bg-orange-50 text-orange-700 rounded-full border border-orange-200 hover:bg-orange-100 transition">
-              <i class="fa-solid fa-location-crosshairs"></i> Recenter Vizag
-            </button>
+            <!-- Tactile Victim Action Buttons -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="locateVictimAndNearestHospital()" class="text-xs font-bold px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl border border-blue-200 transition flex items-center gap-1.5 shadow-xs">
+                <i class="fa-solid fa-location-crosshairs text-blue-600 animate-pulse"></i>
+                <span>Locate Me (GPS)</span>
+              </button>
+              <button type="button" onclick="zoomToNearestHospital()" class="text-xs font-bold px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-200 transition flex items-center gap-1.5 shadow-xs">
+                <i class="fa-solid fa-hospital text-emerald-600"></i>
+                <span>Nearest ER</span>
+              </button>
+              <button type="button" id="btnToggleHazards" onclick="toggleHazardZones()" class="text-xs font-bold px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl border border-amber-200 transition flex items-center gap-1.5 shadow-xs">
+                <i class="fa-solid fa-water text-amber-600"></i>
+                <span>Flood Zones</span>
+              </button>
+              <button type="button" onclick="recenterVizagMap()" class="text-xs font-semibold px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-200 transition flex items-center gap-1">
+                <i class="fa-solid fa-compress text-slate-500"></i>
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Floating Victim Navigation Banner over Map -->
+          <div id="victimMapBanner" class="hidden bg-gradient-to-r from-blue-900 to-indigo-950 text-white p-3 rounded-2xl shadow-lg border border-blue-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-sm shadow-sm">
+                <i class="fa-solid fa-person-running"></i>
+              </span>
+              <div>
+                <span class="text-[10px] text-blue-300 font-extrabold uppercase tracking-wider block">Your Live Coordinates Locked</span>
+                <div class="text-xs font-black text-white" id="victimBannerText">
+                  Nearest Hospital: King George Hospital (KGH) Casualty • 1.2 km away
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <a id="victimBannerCallBtn" href="tel:108" class="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs transition flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-phone"></i> Call Casualty
+              </a>
+              <a id="victimBannerNavBtn" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/30 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-diamond-turn-right text-orange-400"></i> Route
+              </a>
+            </div>
           </div>
           
-          <div id="liveOverviewMap"></div>
+          <!-- Map Canvas Wrapper -->
+          <div class="relative w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
+            <div id="liveOverviewMap"></div>
+            <!-- Interactive Fallback Map (Visible only if Leaflet cannot load) -->
+            <div id="mapOfflineFallback" class="hidden absolute inset-0 bg-slate-900 text-white flex flex-col items-center justify-center p-2 text-center z-10">
+              <canvas id="vizagVectorRadarCanvas" width="700" height="400" class="w-full h-full rounded-xl"></canvas>
+            </div>
+          </div>
           
           <!-- Map Legend -->
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
               <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-600 inline-block shadow-sm"></span> Critical Life Threat</span>
               <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span> High Priority</span>
-              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 inline-block shadow-sm"></span> Moderate</span>
-              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-600 inline-block shadow-sm"></span> 🏥 Hospital</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-600 inline-block shadow-sm"></span> 🏥 Hospital (24x7 Casualty)</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block shadow-sm animate-ping"></span> 📍 You (GPS)</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-red-500/30 border border-red-500 inline-block"></span> Flood Risk Zone</span>
             </div>
-            <span class="text-[11px] text-slate-400 font-mono">17.6868° N, 83.2185° E</span>
+            <span class="text-[11px] text-slate-400 font-mono">Vizag Coastal Sector • 17.6868° N, 83.2185° E</span>
           </div>
         </div>
 
@@ -2726,32 +2801,285 @@
     }
 
     // --- 15. LEAFLET MAPS INTEGRATION (VISAKHAPATNAM, AP) ---
+    let hazardZonesLayer = null;
+    let victimRouteLine = null;
+    let areHazardsVisible = true;
+
+    // Defined Visakhapatnam high-risk flood & landslide hazard zones
+    const VIZAG_HAZARD_ZONES = [
+      {
+        name: "RK Beach & Jalaripeta Coastal Surge Zone",
+        color: "#DC2626",
+        description: "High danger: Tidal storm waves & seawater intrusion",
+        coords: [
+          [17.7020, 83.3080],
+          [17.7180, 83.3260],
+          [17.7120, 83.3360],
+          [17.6980, 83.3150]
+        ]
+      },
+      {
+        name: "Gajuwaka Industrial & Lowland Flood Zone",
+        color: "#EA580C",
+        description: "Severe urban waterlogging & power isolation risks",
+        coords: [
+          [17.6750, 83.1950],
+          [17.7050, 83.2180],
+          [17.6920, 83.2380],
+          [17.6680, 83.2080]
+        ]
+      },
+      {
+        name: "Meghadrigedda Reservoir Runoff Channel",
+        color: "#2563EB",
+        description: "High-speed water release; avoid crossing causeways",
+        coords: [
+          [17.7350, 83.2250],
+          [17.7550, 83.2480],
+          [17.7420, 83.2680],
+          [17.7250, 83.2350]
+        ]
+      },
+      {
+        name: "Simhachalam & Kailasagiri Hill Slope Hazard",
+        color: "#9333EA",
+        description: "Mudslide & falling rock danger during heavy gales",
+        coords: [
+          [17.7650, 83.2380],
+          [17.7850, 83.2580],
+          [17.7750, 83.2780],
+          [17.7520, 83.2450]
+        ]
+      }
+    ];
+
     function initMaps() {
-      if (overviewMap) return;
       const mapEl = document.getElementById('liveOverviewMap');
       if (!mapEl) return;
 
-      // Visakhapatnam coordinates: 17.6868, 83.2185
-      overviewMap = L.map('liveOverviewMap').setView([17.7126, 83.3216], 12);
+      // If Leaflet library is still loading from CDN, retry smoothly without throwing
+      if (typeof L === 'undefined') {
+        console.warn('[Map Engine] Waiting for Leaflet library to load...');
+        setTimeout(initMaps, 250);
+        return;
+      }
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors | APSDMA Visakhapatnam'
-      }).addTo(overviewMap);
+      if (overviewMap) {
+        try {
+          overviewMap.invalidateSize();
+        } catch (_) {}
+        return;
+      }
 
-      overviewMarkersLayer = L.layerGroup().addTo(overviewMap);
-      hospitalMarkersLayer = L.layerGroup().addTo(overviewMap);
+      try {
+        // Visakhapatnam center coordinates: 17.7126, 83.3216
+        overviewMap = L.map('liveOverviewMap', {
+          zoomControl: true,
+          scrollWheelZoom: true,
+          touchZoom: true
+        }).setView([17.7126, 83.3216], 12);
 
-      renderMapMarkers();
-      plotHospitalsOnMap(VIZAG_HOSPITALS);
+        // Fast, high-availability multi-mirror tile layer (CartoDB Voyager + OSM fallback)
+        const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO | APSDMA Visakhapatnam',
+          maxZoom: 19,
+          subdomains: 'abcd'
+        }).addTo(overviewMap);
+
+        tileLayer.on('tileerror', function() {
+          try {
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap'
+            }).addTo(overviewMap);
+          } catch (_) {}
+        });
+
+        overviewMarkersLayer = L.layerGroup().addTo(overviewMap);
+        hospitalMarkersLayer = L.layerGroup().addTo(overviewMap);
+        hazardZonesLayer = L.layerGroup().addTo(overviewMap);
+
+        renderMapMarkers();
+        plotHospitalsOnMap(VIZAG_HOSPITALS, currentUserCoords);
+        renderVizagHazardZones();
+
+        // Ensure Leaflet computes actual container dimensions after paint
+        setTimeout(() => {
+          if (overviewMap) overviewMap.invalidateSize();
+        }, 200);
+        setTimeout(() => {
+          if (overviewMap) overviewMap.invalidateSize();
+        }, 800);
+
+      } catch (err) {
+        console.error('[Map Engine] Leaflet initialization error, switching to vector basemap:', err);
+        renderOfflineVectorMap('liveOverviewMap');
+      }
+    }
+
+    function renderVizagHazardZones() {
+      if (!hazardZonesLayer || !overviewMap || typeof L === 'undefined') return;
+      hazardZonesLayer.clearLayers();
+
+      VIZAG_HAZARD_ZONES.forEach(zone => {
+        const polygon = L.polygon(zone.coords, {
+          color: zone.color,
+          weight: 2,
+          opacity: 0.8,
+          fillColor: zone.color,
+          fillOpacity: 0.22,
+          dashArray: '4, 6'
+        });
+
+        polygon.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4;">
+            <strong style="color: ${zone.color};">⚠️ ${zone.name}</strong>
+            <p style="margin-top: 4px; color: #475569; font-size: 11px;">${zone.description}</p>
+          </div>
+        `);
+
+        hazardZonesLayer.addLayer(polygon);
+      });
+    }
+
+    function toggleHazardZones() {
+      if (!overviewMap || !hazardZonesLayer) return;
+      areHazardsVisible = !areHazardsVisible;
+      const btn = document.getElementById('btnToggleHazards');
+
+      if (areHazardsVisible) {
+        overviewMap.addLayer(hazardZonesLayer);
+        if (btn) {
+          btn.className = 'text-xs font-bold px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl border border-amber-200 transition flex items-center gap-1.5 shadow-xs';
+        }
+        showToast('Vizag flood hazard zones visible on map', 'info');
+      } else {
+        overviewMap.removeLayer(hazardZonesLayer);
+        if (btn) {
+          btn.className = 'text-xs font-bold px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl border border-slate-200 transition flex items-center gap-1.5 shadow-xs';
+        }
+        showToast('Flood hazard zones hidden', 'info');
+      }
     }
 
     function recenterVizagMap() {
-      if (!overviewMap) return;
+      if (!overviewMap) {
+        initMaps();
+        return;
+      }
       overviewMap.setView([17.7126, 83.3216], 12);
+      try { overviewMap.invalidateSize(); } catch (_) {}
+    }
+
+    // Locate victim via GPS, highlight closest hospital, and plot direct emergency line
+    async function locateVictimAndNearestHospital() {
+      showToast('Acquiring high-accuracy GPS coordinates in Visakhapatnam...', 'info');
+
+      if (!navigator.geolocation) {
+        showToast('Geolocation not supported on this device. Using default Vizag coastal center.', 'warning');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          currentUserCoords = { lat, lng };
+
+          // 1. Sort hospitals by distance
+          const sorted = [...VIZAG_HOSPITALS].map(h => {
+            const distanceKm = calculateHaversineDistance(lat, lng, h.lat, h.lng);
+            return { ...h, distanceKm };
+          }).sort((a, b) => a.distanceKm - b.distanceKm);
+
+          const closest = sorted[0];
+
+          // 2. Center map and draw route line if Leaflet available
+          if (overviewMap && typeof L !== 'undefined') {
+            overviewMap.setView([lat, lng], 14);
+
+            plotHospitalsOnMap(sorted, { lat, lng });
+
+            // Remove existing route line
+            if (victimRouteLine) {
+              overviewMap.removeLayer(victimRouteLine);
+            }
+
+            // Draw direct emergency dashed line to closest hospital
+            victimRouteLine = L.polyline([[lat, lng], [closest.lat, closest.lng]], {
+              color: '#2563EB',
+              weight: 4,
+              opacity: 0.85,
+              dashArray: '6, 8'
+            }).addTo(overviewMap);
+
+            overviewMap.fitBounds([
+              [lat, lng],
+              [closest.lat, closest.lng]
+            ], { padding: [50, 50] });
+
+            overviewMap.invalidateSize();
+          }
+
+          // 3. Update floating victim banner
+          const banner = document.getElementById('victimMapBanner');
+          const bannerText = document.getElementById('victimBannerText');
+          const callBtn = document.getElementById('victimBannerCallBtn');
+          const navBtn = document.getElementById('victimBannerNavBtn');
+
+          if (banner && closest) {
+            banner.classList.remove('hidden');
+            const distText = closest.distanceKm < 1 
+              ? `${Math.round(closest.distanceKm * 1000)} meters away (~2 mins)`
+              : `${closest.distanceKm.toFixed(1)} km away (~${Math.max(2, Math.round(closest.distanceKm * 2.5))} mins)`;
+
+            bannerText.innerHTML = `<strong>Nearest Emergency Center:</strong> ${closest.name} • <span class="text-emerald-300 font-bold">${distText}</span>`;
+            if (callBtn) {
+              callBtn.href = 'tel:' + (closest.emergencyPhone || closest.phone).replace(/[^0-9]/g, '');
+              callBtn.innerHTML = `<i class="fa-solid fa-phone"></i> Call ${closest.emergencyPhone || closest.phone}`;
+            }
+            if (navBtn) {
+              navBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${closest.lat},${closest.lng}`;
+            }
+          }
+
+          // 4. Update nearby hospitals UI in other screens
+          updateNearbyHospitalsUI(lat, lng);
+          showToast(`GPS Locked! Nearest hospital: ${closest.name} (${closest.distanceKm.toFixed(1)} km away)`, 'success');
+        },
+        (error) => {
+          console.warn('Geolocation notice:', error.message);
+          const fallbackLat = 17.7126;
+          const fallbackLng = 83.3216;
+          showToast('GPS access permission needed. Showing Visakhapatnam Beach Road sector.', 'warning');
+          if (overviewMap) {
+            overviewMap.setView([fallbackLat, fallbackLng], 13);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
+      );
+    }
+
+    function zoomToNearestHospital() {
+      if (!VIZAG_HOSPITALS || VIZAG_HOSPITALS.length === 0) return;
+      let target = VIZAG_HOSPITALS[0]; // KGH by default
+
+      if (currentUserCoords) {
+        let minDist = 9999;
+        VIZAG_HOSPITALS.forEach(h => {
+          const d = calculateHaversineDistance(currentUserCoords.lat, currentUserCoords.lng, h.lat, h.lng);
+          if (d < minDist) { minDist = d; target = h; }
+        });
+      }
+
+      if (overviewMap && typeof L !== 'undefined') {
+        overviewMap.setView([target.lat, target.lng], 15);
+        overviewMap.invalidateSize();
+        showToast(`Zoomed to ${target.name} (Casualty: ${target.emergencyPhone || target.phone})`, 'info');
+      }
     }
 
     function renderMapMarkers() {
-      if (!overviewMarkersLayer || !overviewMap) return;
+      if (!overviewMarkersLayer || !overviewMap || typeof L === 'undefined') return;
       overviewMarkersLayer.clearLayers();
 
       const db = getLocalDB();
@@ -2784,41 +3112,68 @@
     }
 
     function plotHospitalsOnMap(hospitals, userCoords) {
-      if (!hospitalMarkersLayer || !overviewMap) return;
+      if (!hospitalMarkersLayer || !overviewMap || typeof L === 'undefined') return;
       hospitalMarkersLayer.clearLayers();
 
       // If userCoords provided, plot victim location beacon
       if (userCoords && userCoords.lat && userCoords.lng) {
         const victimBeacon = L.circleMarker([userCoords.lat, userCoords.lng], {
-          radius: 11,
+          radius: 12,
           fillColor: '#2563EB',
           color: '#FFFFFF',
           weight: 3,
           opacity: 1,
-          fillOpacity: 0.9
+          fillOpacity: 0.95
         });
-        victimBeacon.bindPopup(`<strong>📍 Your GPS Location</strong><br>Visakhapatnam Sector`);
+
+        const victimRipple = L.circleMarker([userCoords.lat, userCoords.lng], {
+          radius: 22,
+          fillColor: '#3B82F6',
+          color: '#60A5FA',
+          weight: 1.5,
+          opacity: 0.7,
+          fillOpacity: 0.2
+        });
+
+        victimBeacon.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4;">
+            <strong style="color: #1D4ED8;">📍 YOUR CURRENT GPS LOCATION</strong>
+            <div style="color: #475569; font-size: 11px; margin-top: 2px;">Visakhapatnam Distress Coordinates</div>
+            <div style="color: #0F172A; font-weight: bold; font-family: monospace; font-size: 11px; margin-top: 2px;">
+              ${userCoords.lat.toFixed(4)}° N, ${userCoords.lng.toFixed(4)}° E
+            </div>
+          </div>
+        `);
+
+        hospitalMarkersLayer.addLayer(victimRipple);
         hospitalMarkersLayer.addLayer(victimBeacon);
       }
 
       (hospitals || VIZAG_HOSPITALS).forEach(h => {
+        const isGovt = h.isGovt;
         const hospMarker = L.circleMarker([h.lat, h.lng], {
-          radius: 8,
-          fillColor: '#16A34A',
+          radius: 9,
+          fillColor: isGovt ? '#16A34A' : '#7C3AED',
           color: '#FFFFFF',
           weight: 2,
           opacity: 1,
-          fillOpacity: 0.9
+          fillOpacity: 0.92
         });
 
-        const distStr = h.distanceKm !== undefined ? ` • ${h.distanceKm.toFixed(1)} km away` : '';
+        const distStr = h.distanceKm !== undefined ? ` • <strong>${h.distanceKm.toFixed(1)} km away</strong>` : '';
         hospMarker.bindPopup(`
-          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4;">
-            <strong style="color: #166534;">🏥 ${h.name}</strong>
-            <div style="font-size: 11px; color: #475569; margin-top:2px;">${h.category}${distStr}</div>
-            <div style="margin-top:4px;">
-              <a href="tel:${(h.emergencyPhone || h.phone).replace(/[^0-9]/g, '')}" style="color: #DC2626; font-weight: bold; text-decoration: none;">
+          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; min-width: 200px;">
+            <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: ${isGovt ? '#DCFCE7; color: #166534;' : '#F3E8FF; color: #6B21A8;'}">
+              ${isGovt ? 'Govt Apex Level-1' : 'Private Speciality'}
+            </span>
+            <div style="margin-top: 4px; font-weight: 900; color: #0F172A; font-size: 13px;">${h.name}</div>
+            <div style="font-size: 11px; color: #475569; margin-top: 2px;">${h.address}${distStr}</div>
+            <div style="margin-top: 8px; display: flex; gap: 6px;">
+              <a href="tel:${(h.emergencyPhone || h.phone).replace(/[^0-9]/g, '')}" style="flex:1; background: #DC2626; color: white; padding: 5px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; text-decoration: none; text-align: center;">
                 📞 Call: ${h.emergencyPhone || h.phone}
+              </a>
+              <a href="https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}" target="_blank" style="background: #0F172A; color: white; padding: 5px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; text-decoration: none;">
+                🧭 Directions
               </a>
             </div>
           </div>
@@ -2826,6 +3181,106 @@
 
         hospitalMarkersLayer.addLayer(hospMarker);
       });
+    }
+
+    // Emergency Offline Vector Radar Basemap (Runs if Leaflet fails or device is totally offline)
+    function renderOfflineVectorMap(containerId) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      const fallbackEl = document.getElementById('mapOfflineFallback');
+      if (fallbackEl) fallbackEl.classList.remove('hidden');
+
+      const canvas = document.getElementById('vizagVectorRadarCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Draw background land
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(0, 0, w, h);
+
+      // Draw Bay of Bengal Sea
+      ctx.fillStyle = '#0369A1';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.45, 0);
+      ctx.bezierCurveTo(w * 0.55, h * 0.35, w * 0.65, h * 0.65, w * 0.85, h);
+      ctx.lineTo(w, h);
+      ctx.lineTo(w, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Coastline Shore Line (Golden Beach curve)
+      ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.45, 0);
+      ctx.bezierCurveTo(w * 0.55, h * 0.35, w * 0.65, h * 0.65, w * 0.85, h);
+      ctx.stroke();
+
+      // Land Text
+      ctx.fillStyle = '#94A3B8';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('BAY OF BENGAL (విశాఖ తీరం)', w * 0.68, h * 0.4);
+      ctx.fillText('VISAKHAPATNAM DISTRICT', w * 0.05, h * 0.15);
+
+      // Landmarks & Hospitals
+      const landmarks = [
+        { name: 'RK Beach', x: w * 0.53, y: h * 0.45 },
+        { name: 'KGH Trauma Center', x: w * 0.47, y: h * 0.50, isHosp: true },
+        { name: 'Apollo Health City', x: w * 0.42, y: h * 0.25, isHosp: true },
+        { name: 'CARE Hospitals', x: w * 0.46, y: h * 0.42, isHosp: true },
+        { name: 'Victoria Hospital', x: w * 0.44, y: h * 0.56, isHosp: true },
+        { name: 'SevenHills', x: w * 0.48, y: h * 0.43, isHosp: true },
+        { name: 'VIMS Hanumanthavaka', x: w * 0.40, y: h * 0.28, isHosp: true },
+        { name: 'MVP Colony', x: w * 0.48, y: h * 0.32 },
+        { name: 'Gajuwaka Flood Sector', x: w * 0.25, y: h * 0.65, isZone: true },
+        { name: 'Simhachalam Hills', x: w * 0.28, y: h * 0.25 }
+      ];
+
+      landmarks.forEach(lm => {
+        if (lm.isHosp) {
+          ctx.fillStyle = '#22C55E';
+          ctx.beginPath();
+          ctx.arc(lm.x, lm.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.fillText('🏥 ' + lm.name, lm.x + 8, lm.y + 4);
+        } else if (lm.isZone) {
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+          ctx.beginPath();
+          ctx.arc(lm.x, lm.y, 18, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#F87171';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.fillText('⚠️ ' + lm.name, lm.x - 30, lm.y + 28);
+        } else {
+          ctx.fillStyle = '#E2E8F0';
+          ctx.beginPath();
+          ctx.arc(lm.x, lm.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#CBD5E1';
+          ctx.font = '9px sans-serif';
+          ctx.fillText(lm.name, lm.x + 6, lm.y + 3);
+        }
+      });
+
+      // User location beacon if available
+      if (currentUserCoords) {
+        ctx.fillStyle = '#3B82F6';
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.48, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#60A5FA';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText('📍 YOU ARE HERE (GPS Locked)', w * 0.5 + 12, h * 0.48 + 4);
+      }
     }
 
     // --- 16. DATA FETCHERS & INCIDENTS UI ---
@@ -3097,7 +3552,15 @@
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
       }
 
-      if (screenName === 'home') setTimeout(initMaps, 100);
+      if (screenName === 'home') {
+        setTimeout(() => {
+          if (overviewMap) {
+            try { overviewMap.invalidateSize(); } catch (_) {}
+          } else {
+            initMaps();
+          }
+        }, 120);
+      }
       if (screenName === 'hospitals') renderHospitalsScreen();
       if (screenName === 'result') fetchIncidents();
       if (screenName === 'volunteers') fetchVolunteers();
@@ -3275,6 +3738,16 @@
     window.saveHfConfig = saveHfConfig;
     window.selectVizagLandmark = selectVizagLandmark;
     window.recenterVizagMap = recenterVizagMap;
+    window.locateVictimAndNearestHospital = locateVictimAndNearestHospital;
+    window.zoomToNearestHospital = zoomToNearestHospital;
+    window.toggleHazardZones = toggleHazardZones;
+    window.initMaps = initMaps;
+
+    window.addEventListener('resize', () => {
+      if (overviewMap) {
+        try { overviewMap.invalidateSize(); } catch (_) {}
+      }
+    });
 
     // Startup Initialization
     window.addEventListener('DOMContentLoaded', async () => {
