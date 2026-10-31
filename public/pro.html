@@ -1,0 +1,3311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SahyogAI Vizag (సహయోగ్) — AI Disaster Relief & Response (Visakhapatnam, Andhra Pradesh)</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#EA580C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="AI-Powered Disaster Emergency Response, Voice SOS, Offline Triage & Hospital Locator for Visakhapatnam, Andhra Pradesh. Powered by Antigravity AI Engine.">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#EA580C',
+              orangeDark: '#C2410C',
+              orangeLight: '#FFEDD5',
+              charcoal: '#0F172A',
+              navy: '#1E293B',
+              alertRed: '#DC2626',
+              warningYellow: '#D97706',
+              successGreen: '#16A34A',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Telugu', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Inter & Noto Sans Telugu -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Telugu:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Icons, Maps & Charts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <style>
+    .urgent-pulse {
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .75; transform: scale(1.02); }
+    }
+    .badge-critical { background-color: #FEE2E2; color: #991B1B; border: 1px solid #F87171; }
+    .badge-high { background-color: #FEF3C7; color: #92400E; border: 1px solid #FBBF24; }
+    .badge-medium, .badge-moderate { background-color: #E0E7FF; color: #3730A3; border: 1px solid #818CF8; }
+    .badge-low { background-color: #DCFCE7; color: #166534; border: 1px solid #4ADE80; }
+    
+    .nav-item.active {
+      color: #EA580C;
+      background-color: #FFEDD5;
+      font-weight: 700;
+    }
+    .mobile-tab.active {
+      color: #EA580C;
+    }
+    .mobile-tab.active i {
+      transform: scale(1.15);
+      color: #EA580C;
+    }
+    #miniMap { height: 190px; width: 100%; border-radius: 0.75rem; }
+    #liveOverviewMap { height: 350px; width: 100%; border-radius: 0.75rem; }
+
+    .mic-recording-pulse {
+      animation: mic-wave 1.2s ease-in-out infinite;
+      box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+    }
+    @keyframes mic-wave {
+      0% {
+        transform: scale(0.96);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+      }
+      70% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 22px rgba(220, 38, 38, 0);
+      }
+      100% {
+        transform: scale(0.96);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+      }
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans antialiased selection:bg-orange-500 selection:text-white pb-20 md:pb-6">
+
+  <!-- ===================================================================== -->
+  <!-- 1. PERSISTENT TOP STATUS & ANTIGRAVITY ENGINE BANNER -->
+  <!-- ===================================================================== -->
+  <div id="modeBanner" class="bg-slate-900 text-slate-200 text-xs py-1.5 px-4 text-center border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto">
+    <div class="flex items-center gap-2 shrink-0">
+      <span id="modeIcon" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span id="modeText" class="font-medium">Connecting to SahyogAI Backend...</span>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <button onclick="openAntigravityModal()" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold px-2.5 py-0.5 rounded-full text-[11px] shadow-sm hover:scale-105 transition">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Antigravity AI Engine v2.5</span>
+      </button>
+      <span class="text-[11px] text-slate-400 hidden sm:inline" id="offlineSyncStatus">
+        <i class="fa-solid fa-cloud-arrow-up text-emerald-400 mr-1"></i>Offline Vault Ready
+      </span>
+    </div>
+  </div>
+
+  <!-- DIRECT EMERGENCY SPEED DIAL BAR (PINNED FOR IMMEDIATE RESCUE CALLS) -->
+  <div class="bg-red-950 text-white text-xs px-3 sm:px-4 py-2 border-b border-red-900 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span class="font-extrabold tracking-wide text-red-200 uppercase text-[11px]" data-i18n="speed_dial_title">
+          Vizag Emergency Speed-Dial:
+        </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="tel:112" class="bg-red-600 hover:bg-red-500 text-white px-2.5 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1 transition shadow-sm">
+          <i class="fa-solid fa-phone text-[10px]"></i> 112 <span class="text-[10px] font-normal hidden sm:inline">(National)</span>
+        </a>
+        <a href="tel:108" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1 transition shadow-sm">
+          <i class="fa-solid fa-truck-medical text-[10px]"></i> 108 <span class="text-[10px] font-normal hidden sm:inline">(Ambulance)</span>
+        </a>
+        <a href="tel:1077" class="bg-slate-800 hover:bg-slate-700 text-orange-300 px-2.5 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1 transition shadow-sm border border-slate-700">
+          <i class="fa-solid fa-triangle-exclamation text-[10px]"></i> 1077 <span class="text-[10px] font-normal text-slate-300 hidden sm:inline">(Collectorate EOC)</span>
+        </a>
+        <a href="tel:08912564891" class="bg-slate-800 hover:bg-slate-700 text-red-300 px-2.5 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1 transition shadow-sm border border-slate-700">
+          <i class="fa-solid fa-hospital text-[10px]"></i> 0891-2564891 <span class="text-[10px] font-normal text-slate-300 hidden sm:inline">(KGH Casualty)</span>
+        </a>
+        <a href="tel:101" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1 transition shadow-sm border border-slate-700">
+          <i class="fa-solid fa-fire-extinguisher text-[10px]"></i> 101 <span class="text-[10px] font-normal text-slate-300 hidden sm:inline">(Fire)</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 2. MAIN HEADER & DESKTOP NAVIGATION -->
+  <!-- ===================================================================== -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/95">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand Logo & Sector Tag -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center text-xl font-black shadow-md shadow-orange-500/20">
+            ⚡
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xl font-black tracking-tight text-slate-900 block leading-tight">
+                SahyogAI <span class="text-orange-600">Vizag</span>
+              </span>
+              <span class="bg-orange-100 text-orange-800 font-bold text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider">AP</span>
+            </div>
+            <span class="text-[10px] text-slate-500 font-semibold tracking-wider uppercase block" id="subbrandText">
+              సహయోగ్ • Visakhapatnam Hub
+            </span>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Items -->
+        <nav class="hidden md:flex items-center gap-1 font-medium text-xs text-slate-600">
+          <button onclick="navigate('home')" id="nav-home" class="nav-item active px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+            <i class="fa-solid fa-house"></i>
+            <span data-i18n="nav_home">Home</span>
+          </button>
+          <button onclick="navigate('action')" id="nav-action" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 text-red-600 font-bold hover:bg-red-50">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span data-i18n="nav_action">Emergency SOS</span>
+          </button>
+          <button onclick="navigate('hospitals')" id="nav-hospitals" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 hover:bg-slate-100">
+            <i class="fa-solid fa-hospital text-red-600"></i>
+            <span data-i18n="nav_hospitals">Nearby Medical</span>
+          </button>
+          <button onclick="navigate('result')" id="nav-result" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 hover:bg-slate-100">
+            <i class="fa-solid fa-tower-broadcast"></i>
+            <span data-i18n="nav_result">Dispatch Board</span>
+          </button>
+          <button onclick="navigate('guides')" id="nav-guides" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 hover:bg-slate-100">
+            <i class="fa-solid fa-book-medical text-emerald-600"></i>
+            <span data-i18n="nav_guides">Offline Survival</span>
+          </button>
+          <button onclick="navigate('volunteers')" id="nav-volunteers" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 hover:bg-slate-100">
+            <i class="fa-solid fa-users"></i>
+            <span data-i18n="nav_volunteers">Volunteers</span>
+          </button>
+          <button onclick="navigate('resources')" id="nav-resources" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 hover:bg-slate-100">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span data-i18n="nav_resources">Relief Stock</span>
+          </button>
+          <button onclick="navigate('analytics')" id="nav-analytics" class="nav-item px-3 py-2 rounded-xl transition flex items-center gap-1.5 hover:bg-slate-100">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span data-i18n="nav_analytics">Analytics</span>
+          </button>
+        </nav>
+
+        <!-- Right Side: Track Ticket + Language Toggle + Login -->
+        <div class="flex items-center gap-2">
+          <!-- Track SOS Button -->
+          <button onclick="openTrackModal()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition">
+            <i class="fa-solid fa-magnifying-glass text-orange-600"></i>
+            <span data-i18n="nav_track_btn">Track SOS</span>
+          </button>
+
+          <!-- Language Switcher: Telugu ↔ English -->
+          <button onclick="toggleLanguage()" class="px-2.5 py-1.5 rounded-xl border border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-language text-sm text-orange-600"></i>
+            <span id="langLabel">తెలుగు (Telugu)</span>
+          </button>
+
+          <!-- Auth User Pill -->
+          <div id="authContainer" class="flex items-center">
+            <button onclick="openLoginModal()" id="btnLogin" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center gap-1.5">
+              <i class="fa-solid fa-user-shield"></i>
+              <span class="hidden sm:inline">EOC Login</span>
+            </button>
+          </div>
+
+          <!-- Mobile Hamburger Toggle -->
+          <button onclick="toggleMobileNav()" class="md:hidden text-slate-700 hover:text-slate-900 p-2 rounded-lg text-lg focus:outline-none">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Drawer for secondary menus -->
+    <div id="mobileNavDrawer" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 text-sm font-medium text-slate-700 shadow-xl">
+      <button onclick="navigate('home'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-house text-orange-600"></i> Home
+      </button>
+      <button onclick="navigate('action'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-red-50 text-red-600 font-bold flex items-center gap-2.5">
+        <i class="fa-solid fa-triangle-exclamation"></i> Emergency Voice/Text SOS
+      </button>
+      <button onclick="navigate('hospitals'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-hospital text-red-600"></i> Nearby Medical & Hospitals (GPS)
+      </button>
+      <button onclick="navigate('result'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-tower-broadcast text-blue-600"></i> Shared Dispatch Board
+      </button>
+      <button onclick="navigate('guides'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-book-medical text-emerald-600"></i> Offline Survival Manual
+      </button>
+      <button onclick="navigate('volunteers'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-users text-indigo-600"></i> NDRF & Volunteers Roster
+      </button>
+      <button onclick="navigate('resources'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-boxes-stacked text-purple-600"></i> Relief Stock Inventory
+      </button>
+      <button onclick="navigate('analytics'); closeMobileNav();" class="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-100 flex items-center gap-2.5">
+        <i class="fa-solid fa-chart-pie text-cyan-600"></i> Crisis Telemetry & Analytics
+      </button>
+      <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
+        <button onclick="openTrackModal(); closeMobileNav();" class="flex-1 py-2 rounded-xl bg-orange-100 text-orange-800 font-bold text-xs text-center">
+          <i class="fa-solid fa-magnifying-glass"></i> Track SOS Ticket
+        </button>
+        <button onclick="openAntigravityModal(); closeMobileNav();" class="flex-1 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs text-center">
+          <i class="fa-solid fa-bolt text-orange-400"></i> Antigravity AI
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- 3. MAIN APPLICATION CONTENT SCREENS -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 1: HOME (VICTIM CRISIS DASHBOARD + QUICK ACTIONS) -->
+    <!-- ===================================================================== -->
+    <div id="screen-home" class="space-y-6">
+      
+      <!-- HERO BANNER: HIGH-IMPACT CRISIS ACTION -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-orange-950 to-red-900 text-white p-6 sm:p-10 shadow-2xl border border-orange-500/30">
+        <!-- Background decorative wave -->
+        <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 space-y-4 max-w-3xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-400/40 text-orange-300 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+            <span class="w-2 h-2 rounded-full bg-red-400 animate-ping"></span>
+            <span data-i18n="hero_pill">Visakhapatnam & Coastal Andhra Disaster Operations</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight" data-i18n="hero_promise">
+            Trapped in floodwaters or facing an emergency in Visakhapatnam?
+          </h1>
+
+          <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal" data-i18n="hero_problem">
+            SahyogAI coordinates rescue operations across Visakhapatnam, RK Beach coast, MVP Colony, and Gajuwaka industrial flood zones. Speak or type in Telugu (తెలుగు) or English. Antigravity AI automatically triages urgency, routes to NDRF, Indian Navy ENC, and KGH medical units, and secures your request even during total network blackouts.
+          </p>
+
+          <!-- Tactile Big Action Buttons for Victims -->
+          <div class="pt-3 flex flex-wrap items-center gap-3">
+            <button onclick="navigate('action'); triggerVoiceDirectly();" class="bg-red-600 hover:bg-red-500 text-white px-5 py-3.5 rounded-2xl font-black text-sm sm:text-base transition flex items-center gap-2.5 shadow-xl shadow-red-600/40 hover:scale-105 transform">
+              <i class="fa-solid fa-microphone text-xl animate-pulse"></i>
+              <span data-i18n="btn_voice_sos">One-Tap Voice SOS (మైక్)</span>
+            </button>
+            <button onclick="navigate('action')" class="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-5 py-3.5 rounded-2xl font-bold text-sm sm:text-base transition flex items-center gap-2">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span data-i18n="hero_cta">Fill Emergency Form</span>
+            </button>
+            <button onclick="navigate('hospitals'); triggerGPSImmediate();" class="bg-emerald-600/90 hover:bg-emerald-600 border border-emerald-400 text-white px-4 py-3.5 rounded-2xl font-bold text-sm transition flex items-center gap-2 shadow-lg shadow-emerald-900/30">
+              <i class="fa-solid fa-hospital"></i>
+              <span data-i18n="btn_nearby_hospitals">Nearby Hospitals (GPS)</span>
+            </button>
+            <button onclick="openTrackModal()" class="bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center gap-2">
+              <i class="fa-solid fa-ticket"></i>
+              <span data-i18n="btn_track_sos">Check SOS Status</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE VIZAG MAP & STATS OVERVIEW -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Leaflet Map Container -->
+        <div class="lg:col-span-2 bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <i class="fa-solid fa-map-location-dot text-orange-600"></i>
+                <span data-i18n="map_title">Visakhapatnam Incident & Hospital Sector Map</span>
+              </h3>
+              <p class="text-xs text-slate-500" data-i18n="map_subtitle">Live geographic distribution of SOS calls & 10 emergency hospitals across Vizag coast</p>
+            </div>
+            <button onclick="recenterVizagMap()" class="text-xs font-semibold px-2.5 py-1 bg-orange-50 text-orange-700 rounded-full border border-orange-200 hover:bg-orange-100 transition">
+              <i class="fa-solid fa-location-crosshairs"></i> Recenter Vizag
+            </button>
+          </div>
+          
+          <div id="liveOverviewMap"></div>
+          
+          <!-- Map Legend -->
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-600 inline-block shadow-sm"></span> Critical Life Threat</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span> High Priority</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 inline-block shadow-sm"></span> Moderate</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-600 inline-block shadow-sm"></span> 🏥 Hospital</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-mono">17.6868° N, 83.2185° E</span>
+          </div>
+        </div>
+
+        <!-- Quick Status KPIs & Emergency Hubs -->
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-red-300 transition">
+            <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold shrink-0">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <div>
+              <span class="text-2xl font-black text-slate-900" id="kpiCriticalCount">3</span>
+              <p class="text-xs font-semibold text-slate-500" data-i18n="kpi_critical">Critical Active Incidents</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-orange-300 transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl font-bold shrink-0">
+              <i class="fa-solid fa-person-military-pointing"></i>
+            </div>
+            <div>
+              <span class="text-2xl font-black text-slate-900" id="kpiVolunteersAvailable">4 Squads</span>
+              <p class="text-xs font-semibold text-slate-500" data-i18n="kpi_volunteers">NDRF & Red Cross Ready</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-blue-300 transition">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold shrink-0">
+              <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+            <div>
+              <span class="text-2xl font-black text-slate-900" id="kpiResourcesAvailable">2,130 Units</span>
+              <p class="text-xs font-semibold text-slate-500" data-i18n="kpi_resources">Relief Stock in Visakhapatnam</p>
+            </div>
+          </div>
+
+          <!-- Pinned Vizag Emergency Operations Card -->
+          <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-4 text-white space-y-2.5 shadow-md border border-slate-700">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase tracking-wider text-orange-400 font-extrabold block" data-i18n="ctrl_room_title">
+                Visakhapatnam District EOC
+              </span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+              <div class="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span class="text-slate-400 block text-[10px]" data-i18n="tel_vizag_label">Collectorate Helpline</span>
+                <a href="tel:1077" class="text-orange-300 font-bold font-mono text-sm hover:underline flex items-center gap-1">
+                  <i class="fa-solid fa-phone-volume text-[10px]"></i> 1077
+                </a>
+              </div>
+              <div class="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span class="text-slate-400 block text-[10px]" data-i18n="tel_kgh_label">KGH Casualty Ward</span>
+                <a href="tel:08912564891" class="text-orange-300 font-bold font-mono text-sm hover:underline flex items-center gap-1">
+                  <i class="fa-solid fa-hospital text-[10px]"></i> 0891-2564891
+                </a>
+              </div>
+              <div class="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span class="text-slate-400 block text-[10px]" data-i18n="tel_gvmc_label">GVMC Disaster Control</span>
+                <a href="tel:08912869100" class="text-orange-300 font-bold font-mono text-sm hover:underline flex items-center gap-1">
+                  <i class="fa-solid fa-building text-[10px]"></i> 0891-2869100
+                </a>
+              </div>
+              <div class="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span class="text-slate-400 block text-[10px]" data-i18n="tel_nat_label">National Disaster (112)</span>
+                <a href="tel:112" class="text-orange-300 font-bold font-mono text-sm hover:underline flex items-center gap-1">
+                  <i class="fa-solid fa-shield-halved text-[10px]"></i> 112
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 2: EMERGENCY SOS (VICTIM-FIRST INTAKE + VOICE AI + HF + GPS) -->
+    <!-- ===================================================================== -->
+    <div id="screen-action" class="hidden max-w-3xl mx-auto space-y-6">
+      
+      <!-- Screen Header with Antigravity Indicator -->
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-full uppercase">
+            <span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+            <span data-i18n="sos_badge">Rapid Citizen SOS Intake</span>
+          </span>
+          <span class="text-xs font-semibold text-slate-500">Visakhapatnam (Vizag) • ఆంధ్రప్రదేశ్</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900" data-i18n="action_title">Emergency SOS & AI Situation Recognition</h2>
+        <p class="text-sm text-slate-600" data-i18n="action_subtitle">
+          Speak via microphone or type in Telugu or English. Antigravity AI + Hugging Face Whisper analyzes your voice, identifies life-threatening distress, auto-detects nearby Vizag hospitals, and notifies rescue responders instantly.
+        </p>
+      </div>
+
+      <!-- VOICE SOS MIC STUDIO WIDGET (POWERED BY HUGGING FACE & WEB AUDIO API) -->
+      <div class="bg-gradient-to-r from-orange-50 via-red-50 to-amber-50 rounded-3xl p-6 sm:p-8 border-2 border-dashed border-orange-300 flex flex-col items-center justify-center text-center space-y-4 shadow-sm relative overflow-hidden">
+        
+        <!-- Live Audio Waveform Canvas -->
+        <div class="w-full max-w-md h-12 bg-white/70 rounded-xl p-1 border border-orange-200 flex items-center justify-center overflow-hidden">
+          <canvas id="audioVisualizer" width="400" height="40" class="w-full h-full"></canvas>
+        </div>
+
+        <!-- Tactile Voice Speaking Language Selector (Direct 1-Tap Toggle) -->
+        <div class="w-full max-w-md bg-white/95 p-2 rounded-2xl border border-orange-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 pl-1">
+            <i class="fa-solid fa-microphone-lines text-orange-600 text-sm"></i>
+            <span class="text-xs font-black text-slate-700 uppercase tracking-wider" id="voiceLangLabelTitle">Speaking Language:</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full sm:w-auto justify-center">
+            <button type="button" id="btnVoiceLangTe" onclick="setVoiceSpeakingLanguage('te')" class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 bg-orange-600 text-white shadow-md shadow-orange-600/30">
+              <i class="fa-solid fa-check text-[10px]" id="checkVoiceTe"></i>
+              <span>తెలుగు (te-IN)</span>
+            </button>
+            <button type="button" id="btnVoiceLangEn" onclick="setVoiceSpeakingLanguage('en')" class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200">
+              <i class="fa-solid fa-check text-[10px] hidden" id="checkVoiceEn"></i>
+              <span>English (en-IN)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Big Tactile Microphone Button -->
+        <div class="relative flex items-center justify-center my-1">
+          <div id="micRipple" class="hidden absolute w-32 h-32 rounded-full bg-red-500/25 animate-ping pointer-events-none"></div>
+          <button id="voiceSosBtn" onclick="toggleVoiceSOS()" class="w-24 h-24 rounded-full bg-white text-orange-600 border-4 border-orange-500 shadow-xl hover:scale-105 active:scale-95 transition flex items-center justify-center text-4xl cursor-pointer relative z-10" aria-label="Toggle Voice SOS Recording">
+            <i id="voiceMicIcon" class="fa-solid fa-microphone"></i>
+          </button>
+        </div>
+
+        <div>
+          <span id="voiceMicStatus" class="font-extrabold text-slate-900 text-base sm:text-lg block" data-i18n="mic_prompt">
+            Press Mic &amp; Speak Your Emergency (మైక్ నొక్కి మాట్లాడండి)
+          </span>
+          <div id="voiceMicSubstatus" class="text-xs text-slate-600 block pt-1 font-medium">
+            Active Language: <strong id="voiceActiveLangBadge" class="text-orange-700 font-bold bg-orange-100 px-2 py-0.5 rounded-md">తెలుగు (Telugu - te-IN)</strong> • Continuous Speech • Hugging Face Whisper Ready
+          </div>
+        </div>
+
+        <!-- 1-Tap Quick Spoken Emergency Presets -->
+        <div class="w-full max-w-md pt-1">
+          <span class="text-[11px] font-bold text-slate-500 block mb-1.5">Or tap spoken phrases to simulate voice distress (ఒక్క నొక్కుతో అత్యవసర వాక్యాలు):</span>
+          <div class="flex flex-wrap items-center justify-center gap-1.5">
+            <button type="button" onclick="insertSpokenPhrase('వరద నీరు పెరుగుతోంది ఇల్లు మునిగిపోతుంది బోటు కావాలి')" class="px-2.5 py-1 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-900 text-[11px] font-bold transition flex items-center gap-1 border border-orange-200 shadow-xs">
+              <i class="fa-solid fa-water text-blue-500"></i> "వరద నీరు బోటు కావాలి"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('తీవ్ర రక్తస్రావం గుండె నొప్పి కేజీహెచ్ అంబులెన్స్ వెంటనే పంపండి')" class="px-2.5 py-1 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-[11px] font-bold transition flex items-center gap-1 border border-red-200 shadow-xs">
+              <i class="fa-solid fa-truck-medical text-red-600"></i> "రక్తస్రావం కేజీహెచ్"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('గర్భిణీ స్త్రీకి ప్రసవ నొప్పులు విక్టోరియా ఘోషా ఆసుపత్రి అంబులెన్స్')" class="px-2.5 py-1 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-900 text-[11px] font-bold transition flex items-center gap-1 border border-pink-200 shadow-xs">
+              <i class="fa-solid fa-person-breastfeeding text-pink-600"></i> "గర్భిణీ డెలివరీ"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('Current wire fallen in flood water spark electric shock')" class="px-2.5 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-bold transition flex items-center gap-1 border border-amber-200 shadow-xs">
+              <i class="fa-solid fa-bolt text-amber-600"></i> "Electric Shock Wire"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('Severe flood water trapped on rooftop in MVP Colony Vizag need boat')" class="px-2.5 py-1 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-900 text-[11px] font-bold transition flex items-center gap-1 border border-blue-200 shadow-xs">
+              <i class="fa-solid fa-life-ring text-blue-600"></i> "MVP Colony Flood Boat"
+            </button>
+          </div>
+        </div>
+
+        <!-- Hugging Face AI Mode Controls -->
+        <div class="flex items-center gap-2 pt-1 text-xs">
+          <button type="button" onclick="openHfConfigModal()" class="px-3 py-1 rounded-full bg-white border border-slate-300 hover:border-orange-400 text-slate-700 font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-robot text-orange-600"></i>
+            <span id="hfStatusLabel">Hugging Face AI: Standard Whisper</span>
+            <i class="fa-solid fa-gear text-[10px] text-slate-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI EMERGENCY SITUATION RECOGNITION CARD (DYNAMIC REASSURANCE FOR VICTIM) -->
+      <div id="aiSituationCard" class="hidden bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-6 border-2 border-red-300 shadow-md space-y-3 transition-all">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center font-bold text-sm">
+              <i class="fa-solid fa-brain"></i>
+            </span>
+            <div>
+              <span class="text-xs uppercase tracking-wider text-red-800 font-extrabold block">Antigravity AI Situation Engine</span>
+              <h4 id="aiSituationTitle" class="text-base font-black text-slate-900">Severe Inundation & Rising Floodwaters</h4>
+            </div>
+          </div>
+          <span id="aiSituationUrgency" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider badge-critical">CRITICAL</span>
+        </div>
+
+        <!-- Reassurance & Instructions for Panicking Victim -->
+        <div class="p-3.5 bg-white rounded-2xl border border-red-200 space-y-1.5 text-xs">
+          <div class="font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-heart-pulse text-red-600"></i>
+            <span>Life-Safety Reassurance Advice:</span>
+          </div>
+          <p id="aiSituationReassurance" class="text-slate-700 font-medium leading-relaxed">
+            Stay on the highest solid concrete floor or terrace. Do not touch electrical switches or walk into swirling floodwaters. Keep phone battery safe.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+          <div class="bg-white/90 p-2.5 rounded-xl border border-orange-200">
+            <span class="text-slate-500 block text-[11px] font-semibold">Priority Responder Assigned:</span>
+            <span id="aiSituationResponder" class="font-bold text-slate-900 block">NDRF 10th Bn & Marine Police Inflatable Boats</span>
+          </div>
+          <div class="bg-white/90 p-2.5 rounded-xl border border-orange-200">
+            <span class="text-slate-500 block text-[11px] font-semibold">Nearest Referral Hospital:</span>
+            <span id="aiSituationHospital" class="font-bold text-slate-900 block">King George Hospital (KGH), Maharanipeta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK NEED 1-TAP CHIPS FOR VICTIMS -->
+      <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block" data-i18n="quick_chips_title">
+          1-Tap Need Presets (ఒక్క నొక్కుతో అవసరాలు):
+        </span>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="applyNeedChip('boat')" class="px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>🚤</span> <span>Rescue Boat / బోటు కావాలి</span>
+          </button>
+          <button type="button" onclick="applyNeedChip('medical')" class="px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>🏥</span> <span>Ambulance to KGH / ఆసుపత్రి</span>
+          </button>
+          <button type="button" onclick="applyNeedChip('water')" class="px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>💧</span> <span>Drinking Water / తాగునీరు</span>
+          </button>
+          <button type="button" onclick="applyNeedChip('food')" class="px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>🍚</span> <span>Food Packets / ఆహారం</span>
+          </button>
+          <button type="button" onclick="applyNeedChip('trapped')" class="px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>🏠</span> <span>Stranded on Roof / డాబాపై చిక్కుకున్నాం</span>
+          </button>
+          <button type="button" onclick="applyNeedChip('electric')" class="px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition flex items-center gap-1.5 shadow-sm">
+            <span>⚡</span> <span>Live Wire / కరెంట్ వైరు పడింది</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN EMERGENCY SUBMISSION FORM -->
+      <form id="sosForm" onsubmit="submitSOS(event)" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+        
+        <!-- Emergency Details Textarea -->
+        <div>
+          <label class="block text-sm font-bold text-slate-800 mb-1.5" data-i18n="form_message_label">
+            Emergency Details (సమస్య వివరాలు):
+          </label>
+          <textarea id="sosReportText" rows="4" required class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none placeholder:text-slate-400" placeholder="Describe the crisis, floodwater height, trapped people count, urgent patient conditions..."></textarea>
+          <div class="flex justify-between items-center text-[11px] text-slate-400 mt-1">
+            <span id="charCount">0 / 5000 chars</span>
+            <span>Telugu తెలుగు, English, and phonetic Tanglish accepted</span>
+          </div>
+        </div>
+
+        <!-- Location Description + GPS Grab -->
+        <div>
+          <label class="block text-sm font-bold text-slate-800 mb-1.5" data-i18n="form_location_label">
+            Location / Landmark in Visakhapatnam (ప్రాంతం):
+          </label>
+          <div class="flex gap-2">
+            <input type="text" id="sosLocationText" required class="flex-1 rounded-2xl border border-slate-300 px-4 py-2.5 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none placeholder:text-slate-400" placeholder="e.g., Beach Road near RK Beach, Jagadamba Junction, MVP Colony Sector 4, Gajuwaka...">
+            <button type="button" onclick="grabCurrentGPS()" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+              <i class="fa-solid fa-location-crosshairs text-orange-400"></i>
+              <span data-i18n="btn_gps">Grab GPS</span>
+            </button>
+          </div>
+
+          <!-- GPS Status indicator -->
+          <div id="gpsStatusBadge" class="hidden text-xs text-emerald-600 font-semibold mt-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="gpsStatusText">GPS Acquired</span>
+          </div>
+
+          <!-- AUTOMATIC NEARBY MEDICAL HOSPITALS CARD (APPEARS AS SOON AS GPS IS DETECTED) -->
+          <div id="gpsNearbyHospitalsCard" class="hidden mt-3 p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-hospital text-emerald-700 text-base"></i>
+                <span class="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                  Nearby Emergency Medical Centers (GPS Auto-Detected):
+                </span>
+              </div>
+              <span id="nearestKmBadge" class="bg-emerald-200 text-emerald-900 text-[11px] font-black px-2 py-0.5 rounded-full">
+                0.8 km away
+              </span>
+            </div>
+
+            <!-- Closest Hospital Highlight -->
+            <div id="closestHospitalBanner" class="bg-white rounded-xl p-3 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-sm">
+              <div>
+                <h5 id="closestHospName" class="font-extrabold text-sm text-slate-900">King George Hospital (KGH)</h5>
+                <p id="closestHospAddress" class="text-xs text-slate-600">Maharanipeta, Beach Road • Apex Trauma Centre</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <a id="closestHospCallBtn" href="tel:08912564891" class="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-phone"></i> Call 24x7 ER
+                </a>
+                <a id="closestHospNavBtn" href="https://maps.google.com" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1 border border-slate-300">
+                  <i class="fa-solid fa-diamond-turn-right text-orange-600"></i> Route
+                </a>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-emerald-800">
+              <span id="nearbyHospCountText">3 hospitals found within 5km of your location</span>
+              <button type="button" onclick="navigate('hospitals')" class="font-bold underline hover:text-emerald-950">
+                View All Vizag Hospitals &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Landmark Picker Dropdown for Vizag -->
+          <div class="pt-2">
+            <select onchange="selectVizagLandmark(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-600 focus:outline-none w-full sm:w-auto">
+              <option value="">-- Or choose known Visakhapatnam landmark --</option>
+              <option value="King George Hospital (KGH), Maharanipeta, Visakhapatnam">King George Hospital (KGH - కేజీహెచ్)</option>
+              <option value="RK Beach Road, Near Submarine Museum, Visakhapatnam">RK Beach (రామకృష్ణ బీచ్ రోడ్)</option>
+              <option value="Jagadamba Junction & Centre, Visakhapatnam">Jagadamba Junction (జగదాంబ సెంటర్)</option>
+              <option value="MVP Colony Sector 4, Visakhapatnam">MVP Colony (ఎంవీపీ కాలనీ)</option>
+              <option value="Gajuwaka Industrial Corridor, Autonagar, Visakhapatnam">Gajuwaka Industrial Zone (గాజువాక)</option>
+              <option value="Rushikonda Coastal Road & IT SEZ, Visakhapatnam">Rushikonda Coast (రుషికొండ బీచ్)</option>
+              <option value="Visakhapatnam Fishing Harbour & Port Area">Visakhapatnam Port & Harbour (పోర్టు ఏరియా)</option>
+              <option value="Health City, Chinagadili, Arilova, Visakhapatnam">Health City Arilova (అపోలో & విమ్స్)</option>
+              <option value="Simhachalam Foothills & Gopalapatnam, Visakhapatnam">Simhachalam (సింహాచలం)</option>
+              <option value="Madhurawada Car Shed Junction, Visakhapatnam">Madhurawada (మధురవాడ)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Category & People Count Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-800 mb-1.5" data-i18n="form_category_label">
+              Primary Need Category:
+            </label>
+            <select id="sosCategorySelect" class="w-full rounded-2xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none bg-white">
+              <option value="">Auto-Detect by AI</option>
+              <option value="Flooding">Flooding / Water Ingress (వరద నీరు)</option>
+              <option value="Medical Emergency">Medical Emergency (వైద్య అత్యవసరం / KGH)</option>
+              <option value="Trapped / Missing People">Trapped / Missing People (చిక్కుకున్నాం)</option>
+              <option value="Food & Drinking Water">Food & Drinking Water (ఆహారం & తాగునీరు)</option>
+              <option value="Roadblock & Fallen Trees">Roadblock & Live Wires (రహదారి అడ్డంకి)</option>
+              <option value="Shelter">Temporary Shelter / Cyclone Damage (ఆశ్రయం)</option>
+              <option value="Fire">Fire / Gas Hazard (అగ్ని / గ్యాస్ ప్రమాదం)</option>
+              <option value="Other Emergency">Other Emergency</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-slate-800 mb-1.5">Estimated People Affected:</label>
+            <select id="sosPeopleCount" class="w-full rounded-2xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none bg-white">
+              <option value="1-3">1 - 3 people</option>
+              <option value="4-8" selected>4 - 8 people (Family)</option>
+              <option value="9-25">9 - 25 people (Building/Hamlet)</option>
+              <option value="25+">25+ people (Relief Camp/Shelter)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Optional Contact -->
+        <div>
+          <label class="block text-sm font-bold text-slate-800 mb-1.5">Contact Phone Number (Restricted):</label>
+          <input type="tel" id="sosContactPhone" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none placeholder:text-slate-400" placeholder="10-digit mobile number for rescue coordination call-back">
+          <span class="text-[11px] text-slate-400 block mt-1">Stored securely on server; never visible on public citizen boards.</span>
+        </div>
+
+        <!-- Submit SOS Buttons (Online AI Triage + Offline SMS Fallback) -->
+        <div class="space-y-2 pt-2">
+          <button type="submit" id="btnSubmitSOS" class="w-full py-4 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-black text-base transition flex items-center justify-center gap-2 shadow-xl shadow-orange-600/30 active:scale-[0.98]">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span data-i18n="btn_submit_triage">Submit SOS & Run AI Triage</span>
+          </button>
+
+          <!-- 1-Tap Offline SMS Fallback (Works when 4G/Internet is dead) -->
+          <button type="button" onclick="sendOfflineSMS()" class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold text-xs transition flex items-center justify-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-comment-sms text-orange-400 text-sm"></i>
+            <span>No Mobile Internet? Send SOS via Direct SMS (Works without 4G)</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- CITIZEN TRACKING RECEIPT (APPEARS AFTER SUBMISSION) -->
+      <div id="sosReceiptCard" class="hidden bg-emerald-50 border-2 border-emerald-400 rounded-3xl p-6 text-slate-900 space-y-4 shadow-lg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black">✓</span>
+            <div>
+              <span class="text-sm font-bold text-emerald-950 block">SOS Secured in Disaster Registry</span>
+              <span class="text-xs text-emerald-800">Your emergency is now live on the Visakhapatnam EOC Board</span>
+            </div>
+          </div>
+          <span id="receiptRefBadge" class="bg-emerald-200 text-emerald-900 font-mono font-bold text-xs px-3 py-1 rounded-xl">INC-VZG-XXXX</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-emerald-200 space-y-2">
+          <div class="flex justify-between text-xs text-slate-500">
+            <span>Reference Tracking Code:</span>
+            <button onclick="copyReceiptRef()" class="text-emerald-700 hover:underline font-bold flex items-center gap-1">
+              <i class="fa-solid fa-copy"></i> Copy Code
+            </button>
+          </div>
+          <div id="receiptRefValue" class="text-2xl font-black font-mono text-slate-900 tracking-wider">INC-VZG-0000</div>
+          <p class="text-xs text-slate-600 pt-1">
+            Save this code. You can check your rescue team status anytime by clicking <strong>Track SOS</strong> or calling <strong>1077</strong>.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button onclick="navigate('result')" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3 rounded-2xl font-bold text-xs transition">
+            View on Live Dispatch Board
+          </button>
+          <button onclick="resetSOSForm()" class="bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 px-4 py-3 rounded-2xl font-bold text-xs transition">
+            Submit Another SOS
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 3: NEARBY HOSPITALS & MEDICAL CENTRES DIRECTORY (GPS-AWARE) -->
+    <!-- ===================================================================== -->
+    <div id="screen-hospitals" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 uppercase">24x7 Emergency Grid</span>
+            <span class="text-xs text-slate-500">Visakhapatnam, Andhra Pradesh</span>
+          </div>
+          <h2 class="text-2xl font-black text-slate-900 mt-1">Nearby Emergency Hospitals & Trauma Centers</h2>
+          <p class="text-xs text-slate-500">Direct hospital dispatch, GPS distance calculations, emergency bed capacity & 1-tap casualty dials.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="grabCurrentGPS()" class="px-3.5 py-2 rounded-2xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-location-crosshairs text-orange-400"></i> Refresh GPS Distance
+          </button>
+        </div>
+      </div>
+
+      <!-- Hospital Cards Grid -->
+      <div id="hospitalsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 4: SHARED DISPATCH BOARD (INCIDENTS) -->
+    <!-- ===================================================================== -->
+    <div id="screen-result" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900" data-i18n="dispatch_title">Shared Crisis Dispatch Board</h2>
+          <p class="text-xs text-slate-500" data-i18n="dispatch_subtitle">APSDMA, Visakhapatnam District Administration & GVMC Central Incident Queue</p>
+        </div>
+
+        <!-- Urgency Filters -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="filterUrgency('ALL')" id="filter-all" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white">ALL</button>
+          <button onclick="filterUrgency('Critical')" id="filter-critical" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200">Critical</button>
+          <button onclick="filterUrgency('High')" id="filter-high" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 hover:bg-amber-200">High</button>
+          <button onclick="filterUrgency('Medium')" id="filter-medium" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200">Medium</button>
+          <button onclick="filterUrgency('Low')" id="filter-low" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Low</button>
+        </div>
+      </div>
+
+      <!-- Live Incidents Grid -->
+      <div id="incidentsGrid" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 5: OFFLINE DISASTER SURVIVAL & FIRST AID MANUAL -->
+    <!-- ===================================================================== -->
+    <div id="screen-guides" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">100% Offline Accessible</span>
+          <span class="text-xs text-slate-500">No Internet Required</span>
+        </div>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Disaster Survival & First-Aid Manual</h2>
+        <p class="text-xs text-slate-500">Essential field guides for cyclones (Hudhud-grade storm response), urban flash floods, and life-critical first aid.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Cyclone Safety Guide -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center gap-2.5 text-orange-600 font-extrabold text-base">
+            <i class="fa-solid fa-hurricane text-xl"></i>
+            <span>Cyclone Survival Rules (విశాఖ తుపాను జాగ్రత్తలు)</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-700 font-medium list-disc pl-5">
+            <li><strong>Stay Indoors:</strong> Remain in an interior room or hallway away from windows and glass panes.</li>
+            <li><strong>The "Eye" Deception:</strong> If winds suddenly stop, DO NOT go outside. The second half of the cyclone is often stronger.</li>
+            <li><strong>Power & Gas:</strong> Switch off main circuit breakers and LPG cylinders before floodwaters enter.</li>
+            <li><strong>Terrace Stranded:</strong> If water forces you onto a roof, take a white sheet and flashlight to signal SAR helicopters.</li>
+          </ul>
+        </div>
+
+        <!-- Flash Flood Guide -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center gap-2.5 text-blue-600 font-extrabold text-base">
+            <i class="fa-solid fa-water text-xl"></i>
+            <span>Flood & Sea Inundation (వరద రక్షణ సూత్రాలు)</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-700 font-medium list-disc pl-5">
+            <li><strong>Never Walk in Moving Water:</strong> Just 15 cm of moving floodwater can sweep a human off their feet.</li>
+            <li><strong>Electrocution Risk:</strong> Avoid touching water where fallen cables or transformer boxes are submerged.</li>
+            <li><strong>Contaminated Water:</strong> Boil all drinking water or use chlorine/halogen tablets. Do not drink tap water.</li>
+            <li><strong>Dry Elevation:</strong> Keep children, pregnant mothers, and medication elevated on concrete beds.</li>
+          </ul>
+        </div>
+
+        <!-- CPR & Cardiac Guide -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center gap-2.5 text-red-600 font-extrabold text-base">
+            <i class="fa-solid fa-heart-pulse text-xl"></i>
+            <span>First Aid: CPR & Cardiac (గుండెపోటు ప్రథమ చికిత్స)</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-700 font-medium list-disc pl-5">
+            <li><strong>Unresponsive Victim:</strong> Check responsiveness. Call 108 immediately.</li>
+            <li><strong>Hands-Only CPR:</strong> Push hard and fast in the center of the chest (100–120 beats/min).</li>
+            <li><strong>Chest Compression Depth:</strong> Compress at least 5 cm deep; allow full chest recoil between compressions.</li>
+            <li><strong>Recovery Position:</strong> If breathing but unconscious, turn them onto their side to keep airway open.</li>
+          </ul>
+        </div>
+
+        <!-- Bleeding & Snakebite -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center gap-2.5 text-emerald-600 font-extrabold text-base">
+            <i class="fa-solid fa-kit-medical text-xl"></i>
+            <span>First Aid: Severe Bleeding & Snakebite (రక్తస్రావం / పాముకాటు)</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-700 font-medium list-disc pl-5">
+            <li><strong>Severe Bleeding:</strong> Apply continuous direct firm pressure using a clean cloth or bandage. Elevate limb.</li>
+            <li><strong>Snakebite:</strong> Keep the bitten limb completely still below heart level. DO NOT cut, suck venom, or apply tight tourniquets.</li>
+            <li><strong>Antivenom Transport:</strong> Rush victim immediately to King George Hospital (KGH) or VIMS where antivenom is stocked.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 6: VOLUNTEERS & NDRF UNITS -->
+    <!-- ===================================================================== -->
+    <div id="screen-volunteers" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900">NDRF Units & Field Volunteers</h2>
+          <p class="text-xs text-slate-500">Active disaster responder roster across Visakhapatnam, Beach Road, and Gajuwaka.</p>
+        </div>
+        <div id="volunteerAdminControls"></div>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3.5 px-4">Squad / Volunteer</th>
+                <th class="py-3.5 px-4">Affiliation & Operational Sector</th>
+                <th class="py-3.5 px-4">Skills</th>
+                <th class="py-3.5 px-4">Availability</th>
+                <th class="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="volunteersTableBody" class="divide-y divide-slate-100 text-slate-800 font-medium"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 7: RELIEF INVENTORY & DEPOTS -->
+    <!-- ===================================================================== -->
+    <div id="screen-resources" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900">Visakhapatnam Relief Inventory & Warehouses</h2>
+          <p class="text-xs text-slate-500">Real-time supply tracking across GVMC Warehouses, Collectorate Storehouse & KGH Casualty.</p>
+        </div>
+        <div id="resourceAdminControls"></div>
+      </div>
+
+      <div id="resourcesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 8: ANALYTICS & SITUATION REPORTS -->
+    <!-- ===================================================================== -->
+    <div id="screen-analytics" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+        <h2 class="text-2xl font-black text-slate-900">Visakhapatnam Crisis Analytics & AI Telemetry</h2>
+        <p class="text-xs text-slate-500">Real-time breakdown of emergencies, Antigravity AI triage accuracy, and dispatch efficiency.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-bold text-sm text-slate-900">Urgency Distribution (Critical vs High vs Medium)</h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="urgencyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-bold text-sm text-slate-900">Incidents by Category</h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- 4. MOBILE BOTTOM NAVIGATION BAR (FIXED FOR ONE-THUMB RESCUE ACCESS) -->
+  <!-- ===================================================================== -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1 flex items-center justify-around shadow-2xl">
+    <button onclick="navigate('home')" id="mobile-tab-home" class="mobile-tab active flex flex-col items-center justify-center p-1.5 text-slate-500 transition">
+      <i class="fa-solid fa-house text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Home</span>
+    </button>
+    <button onclick="navigate('action'); triggerVoiceDirectly();" id="mobile-tab-action" class="mobile-tab flex flex-col items-center justify-center p-1 text-red-600 transition">
+      <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-600/40 -mt-4 border-2 border-white">
+        <i class="fa-solid fa-microphone text-base animate-pulse"></i>
+      </div>
+      <span class="text-[10px] font-black mt-0.5 text-red-600">Voice SOS</span>
+    </button>
+    <button onclick="navigate('hospitals')" id="mobile-tab-hospitals" class="mobile-tab flex flex-col items-center justify-center p-1.5 text-slate-500 transition">
+      <i class="fa-solid fa-hospital text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Medical</span>
+    </button>
+    <button onclick="navigate('result')" id="mobile-tab-result" class="mobile-tab flex flex-col items-center justify-center p-1.5 text-slate-500 transition">
+      <i class="fa-solid fa-tower-broadcast text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Board</span>
+    </button>
+    <button onclick="navigate('guides')" id="mobile-tab-guides" class="mobile-tab flex flex-col items-center justify-center p-1.5 text-slate-500 transition">
+      <i class="fa-solid fa-book-medical text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Guide</span>
+    </button>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 5. MODALS: ANTIGRAVITY ENGINE, INCIDENT DETAIL, TRACK TICKET, HF SETUP -->
+  <!-- ===================================================================== -->
+
+  <!-- MODAL: ABOUT ANTIGRAVITY AI ENGINE -->
+  <div id="antigravityModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-orange-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-slate-900 text-base">Antigravity AI Engine v2.5</h3>
+            <span class="text-xs text-orange-600 font-semibold">Autonomous Disaster Emergency Intelligence</span>
+          </div>
+        </div>
+        <button onclick="closeAntigravityModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        The <strong>Antigravity AI Engine</strong> powers zero-latency emergency triage and crisis dispatch for Visakhapatnam, Andhra Pradesh. Built specifically for high-stress disaster conditions with intermittent or zero network connectivity.
+      </p>
+
+      <div class="space-y-3 pt-1 text-xs">
+        <div class="p-3 bg-orange-50 rounded-2xl border border-orange-200 space-y-1">
+          <div class="font-bold text-orange-950 flex items-center gap-1.5">
+            <i class="fa-solid fa-brain text-orange-600"></i>
+            <span>Neural Edge Situation Recognition:</span>
+          </div>
+          <p class="text-orange-900 leading-normal">
+            Converts spoken speech (Telugu/English) into structured disaster triage, identifying trapped persons, medical trauma, and power hazards in under 350ms.
+          </p>
+        </div>
+
+        <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-1">
+          <div class="font-bold text-emerald-950 flex items-center gap-1.5">
+            <i class="fa-solid fa-hospital text-emerald-600"></i>
+            <span>Geospatial Hospital Triage Allocation:</span>
+          </div>
+          <p class="text-emerald-900 leading-normal">
+            Calculates high-accuracy Haversine distances to 10 Visakhapatnam emergency hospitals (KGH, Apollo, VIMS, SevenHills) and provides 1-tap route guidance.
+          </p>
+        </div>
+
+        <div class="p-3 bg-blue-50 rounded-2xl border border-blue-200 space-y-1">
+          <div class="font-bold text-blue-950 flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud-arrow-down text-blue-600"></i>
+            <span>Offline-First Resilience & Outbox:</span>
+          </div>
+          <p class="text-blue-900 leading-normal">
+            Operates completely offline using IndexedDB emergency outboxes and provides instant SMS fallback to 112/1077 when 4G mobile data collapses.
+          </p>
+        </div>
+      </div>
+
+      <button onclick="closeAntigravityModal()" class="w-full py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs transition">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: HUGGING FACE SETTINGS -->
+  <div id="hfConfigModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+          <i class="fa-solid fa-robot text-orange-600"></i>
+          <span>Hugging Face AI Speech Setup</span>
+        </h3>
+        <button onclick="closeHfConfigModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Configure Hugging Face automatic speech recognition. Works out-of-the-box via browser speech engine + server AI, or enter your personal HF Token for dedicated large-scale Whisper v3 inference.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Hugging Face API Token (Optional):</label>
+          <input type="password" id="hfApiKeyInput" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxx" class="w-full rounded-2xl border border-slate-300 px-3.5 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-200">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Model Selection:</label>
+          <select id="hfModelSelect" class="w-full rounded-2xl border border-slate-300 px-3 py-2 text-xs focus:outline-none bg-white">
+            <option value="openai/whisper-large-v3-turbo" selected>openai/whisper-large-v3-turbo (Ultra Fast & Accurate)</option>
+            <option value="openai/whisper-small">openai/whisper-small (Lightweight)</option>
+            <option value="facebook/mms-1b-all">facebook/mms-1b-all (Multilingual Indian Dialects)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveHfConfig()" class="flex-1 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs transition">
+          Save Settings
+        </button>
+        <button onclick="closeHfConfigModal()" class="py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INCIDENT DETAIL & DISPATCH VIEW -->
+  <div id="incidentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span id="modalRef" class="font-mono font-bold text-xs bg-slate-100 px-2.5 py-1 rounded-xl text-slate-800">INC-VZG-000</span>
+          <span id="modalUrgencyBadge" class="ml-2 text-xs font-bold px-2 py-0.5 rounded-full badge-critical">Critical</span>
+        </div>
+        <button onclick="closeIncidentModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <div id="modalBody" class="space-y-4"></div>
+      <div id="miniMap"></div>
+
+      <div id="modalActions" class="border-t border-slate-100 pt-4 flex flex-wrap gap-2 justify-end"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: TRACK MY SOS TICKET -->
+  <div id="trackModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+          <i class="fa-solid fa-magnifying-glass text-orange-600"></i>
+          <span>Track Your SOS Emergency Ticket</span>
+        </h3>
+        <button onclick="closeTrackModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Enter Emergency Reference Code:</label>
+        <input type="text" id="trackInputRef" placeholder="e.g. INC-VZG-001 or OFFLINE-XXX" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 text-sm uppercase font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-200">
+      </div>
+      <button onclick="lookupTrackStatus()" class="w-full py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition">
+        Look Up Status
+      </button>
+      <div id="trackResultBox" class="hidden pt-2 text-xs space-y-2 border-t border-slate-100"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOGIN / AUTH -->
+  <div id="loginModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-orange-600"></i>
+          <span>Coordinator & Staff Login</span>
+        </h3>
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+      </div>
+      <form onsubmit="handleLogin(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Username:</label>
+          <input type="text" id="loginUsername" required class="w-full rounded-2xl border border-slate-300 px-3.5 py-2 text-sm focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password:</label>
+          <input type="password" id="loginPassword" required class="w-full rounded-2xl border border-slate-300 px-3.5 py-2 text-sm focus:outline-none">
+        </div>
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-[11px] text-slate-500">
+          <strong>Demo credentials:</strong><br>
+          Coordinator: <code class="text-orange-600 font-bold">coordinator</code> / <code class="text-orange-600 font-bold">Coord@2024!</code><br>
+          Admin: <code class="text-orange-600 font-bold">admin</code> / <code class="text-orange-600 font-bold">Admin@2024!</code>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toastContainer" class="fixed bottom-16 sm:bottom-6 left-6 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- 6. APPLICATION JAVASCRIPT ENGINE (VIZAG CRISIS RESILIENCE SUITE) -->
+  <!-- ===================================================================== -->
+  <script>
+    // --- 1. GLOBAL STATE & CONFIGURATION ---
+    let isServerConnected = false;
+    const API_BASE = window.location.protocol === 'file:'
+      ? 'http://localhost:5000/api'
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? (window.location.protocol + '//' + window.location.hostname + ':5000/api')
+          : '/api');
+
+    let currentUser = null;
+    let currentLang = 'en'; // 'en' or 'te' (Telugu)
+    let incidents = [];
+    let volunteersList = [];
+    let resourcesList = [];
+    let currentModalIncident = null;
+    let sseSource = null;
+    let capturedCoordinates = null;
+    let overviewMap = null;
+    let modalMiniMap = null;
+    let overviewMarkersLayer = null;
+    let hospitalMarkersLayer = null;
+
+    // Speech & Web Audio visualizer state
+    let speechRecognitionInstance = null;
+    let isRecordingVoice = false;
+    let voiceSpeakingLang = 'te'; // 'te' (te-IN Telugu) or 'en' (en-IN English)
+    let speechFinalTranscript = '';
+    let audioStream = null;
+    let audioContext = null;
+    let analyserNode = null;
+    let visualizerAnimationId = null;
+    let mediaRecorder = null;
+    let recordedAudioChunks = [];
+
+    // --- 2. VISAKHAPATNAM HOSPITALS MASTER REGISTRY ---
+    const VIZAG_HOSPITALS = [
+      {
+        id: "hosp-kgh",
+        name: "King George Hospital (KGH)",
+        category: "Govt Apex Tertiary & Level 1 Trauma Center",
+        address: "Maharanipeta, Beach Road, Visakhapatnam - 530002",
+        phone: "0891-2564891",
+        emergencyPhone: "108",
+        lat: 17.7083,
+        lng: 83.3072,
+        facilities: ["24x7 Emergency Casualty", "Blood Bank", "Disaster Surge Ward", "Surgical ICU"],
+        isGovt: true
+      },
+      {
+        id: "hosp-apollo",
+        name: "Apollo Hospitals Health City",
+        category: "Super Speciality & Emergency Cardiac Care",
+        address: "Health City, Chinagadili, Arilova, Visakhapatnam - 530040",
+        phone: "0891-2867777",
+        emergencyPhone: "1066",
+        lat: 17.7663,
+        lng: 83.3325,
+        facilities: ["Level 1 Trauma Care", "Cath Lab", "Stroke Resuscitation Unit"],
+        isGovt: false
+      },
+      {
+        id: "hosp-care",
+        name: "CARE Hospitals Ramnagar",
+        category: "Super Speciality & Level 1 Trauma Care",
+        address: "AS Raja Complex, Waltair Main Rd, Ramnagar, Visakhapatnam - 530002",
+        phone: "0891-3041444",
+        emergencyPhone: "0891-3041111",
+        lat: 17.7215,
+        lng: 83.3102,
+        facilities: ["24x7 Critical Care", "Neuro-Trauma", "Emergency Resuscitation"],
+        isGovt: false
+      },
+      {
+        id: "hosp-sevenhills",
+        name: "SevenHills Hospital",
+        category: "Multi-Speciality Disaster Emergency Unit",
+        address: "Rockdale Layout, Waltair Uplands, Visakhapatnam - 530002",
+        phone: "0891-6677777",
+        emergencyPhone: "0891-2708090",
+        lat: 17.7145,
+        lng: 83.3080,
+        facilities: ["ICU & CCU", "Pediatric Trauma", "24x7 Ambulance Escort"],
+        isGovt: false
+      },
+      {
+        id: "hosp-victoria",
+        name: "Govt Victoria Hospital (Ghosha Hospital)",
+        category: "Maternal & Women & Child Speciality",
+        address: "Chengal Rao Peta, Old Post Office Area, Visakhapatnam - 530001",
+        phone: "0891-2565123",
+        emergencyPhone: "108",
+        lat: 17.6995,
+        lng: 83.2985,
+        facilities: ["High-Risk Obstetrics", "NICU", "Emergency Childbirth Ward"],
+        isGovt: true
+      },
+      {
+        id: "hosp-vims",
+        name: "Visakha Institute of Medical Sciences (VIMS)",
+        category: "Government Multi Super Speciality Hospital",
+        address: "Hanumanthavaka Junction, Visakhapatnam - 530040",
+        phone: "0891-2856700",
+        emergencyPhone: "108",
+        lat: 17.7635,
+        lng: 83.3370,
+        facilities: ["Disaster Casualty Annex", "Oxygen Reservoir", "Spinal Trauma"],
+        isGovt: true
+      },
+      {
+        id: "hosp-medicover",
+        name: "Medicover Hospitals MVP Colony",
+        category: "24x7 Trauma & Critical Care",
+        address: "Sector 6, MVP Colony, Visakhapatnam - 530017",
+        phone: "0891-6822222",
+        emergencyPhone: "0891-6822200",
+        lat: 17.7410,
+        lng: 83.3340,
+        facilities: ["Emergency Ambulance", "CT/MRI 24x7", "Critical Resuscitation"],
+        isGovt: false
+      },
+      {
+        id: "hosp-inhs",
+        name: "INHS Kalyani (Indian Naval Hospital)",
+        category: "Armed Forces Medical & Coastal SAR Hospital",
+        address: "Gandhigram, Malkapuram, Visakhapatnam - 530005",
+        phone: "0891-2812000",
+        emergencyPhone: "0891-2812234",
+        lat: 17.6890,
+        lng: 83.2450,
+        facilities: ["Coastal Diving Medicine", "Hyperbaric Chamber", "Defense Casualty"],
+        isGovt: true
+      },
+      {
+        id: "hosp-eye",
+        name: "Government Regional Eye Hospital",
+        category: "Specialized Ophthalmic Trauma Care",
+        address: "Ramnagar, Visakhapatnam - 530002",
+        phone: "0891-2564894",
+        emergencyPhone: "108",
+        lat: 17.7230,
+        lng: 83.3120,
+        facilities: ["Chemical Eye Burn Emergency", "Corneal Injury Triage"],
+        isGovt: true
+      },
+      {
+        id: "hosp-gvp",
+        name: "GVP Institute of Medical Technology",
+        category: "Highway Corridor Emergency & Medical College",
+        address: "Marikavalasa, Madhurawada, Visakhapatnam - 530048",
+        phone: "0891-2892999",
+        emergencyPhone: "108",
+        lat: 17.8120,
+        lng: 83.3650,
+        facilities: ["North Vizag Highway Trauma", "24x7 Casualty", "Blood Bank"],
+        isGovt: false
+      }
+    ];
+
+    // --- 3. BILINGUAL DICTIONARY (TELUGU తెలుగు + ENGLISH) ---
+    const translations = {
+      en: {
+        ctrl_room_title: "Visakhapatnam District EOC",
+        tel_vizag_label: "Collectorate Helpline",
+        tel_kgh_label: "KGH Casualty",
+        tel_gvmc_label: "GVMC Disaster Control",
+        tel_nat_label: "National Disaster",
+        speed_dial_title: "Vizag Emergency Speed-Dial:",
+        speed_dial_sub: "Tap any number to call Visakhapatnam rescue teams directly",
+        nav_home: "Home",
+        nav_action: "Emergency SOS",
+        nav_hospitals: "Nearby Medical",
+        nav_result: "Dispatch Board",
+        nav_volunteers: "Volunteers",
+        nav_resources: "Relief Stock",
+        nav_guides: "Offline Survival",
+        nav_analytics: "Analytics",
+        btn_quick_sos: "Submit SOS",
+        nav_track_btn: "Track SOS",
+        hero_pill: "Visakhapatnam & Coastal Andhra Disaster Operations",
+        hero_promise: "Trapped in floodwaters or facing an emergency in Visakhapatnam?",
+        hero_problem: "SahyogAI coordinates rescue operations across Visakhapatnam, RK Beach coast, MVP Colony, and Gajuwaka industrial flood zones. Speak or type in Telugu (తెలుగు) or English. Antigravity AI automatically triages urgency, routes to NDRF, Indian Navy ENC, and KGH medical units, and secures your request even during total network blackouts.",
+        btn_voice_sos: "One-Tap Voice SOS (మైక్)",
+        hero_cta: "Fill Emergency Form",
+        btn_nearby_hospitals: "Nearby Hospitals (GPS)",
+        btn_track_sos: "Check SOS Status",
+        map_title: "Visakhapatnam Incident & Hospital Sector Map",
+        map_subtitle: "Live geographic distribution of SOS calls & 10 emergency hospitals across Vizag coast",
+        kpi_critical: "Critical Active Incidents",
+        kpi_volunteers: "NDRF & Red Cross Ready",
+        kpi_resources: "Relief Stock in Visakhapatnam",
+        sos_badge: "Rapid Citizen SOS Intake",
+        action_title: "Emergency SOS & AI Situation Recognition",
+        action_subtitle: "Speak via microphone or type in Telugu or English. Antigravity AI + Hugging Face Whisper analyzes your voice, identifies life-threatening distress, auto-detects nearby Vizag hospitals, and notifies rescue responders instantly.",
+        mic_prompt: "Press Mic & Speak Your Emergency (మైక్ నొక్కి మాట్లాడండి)",
+        quick_chips_title: "1-Tap Need Presets (ఒక్క నొక్కుతో అవసరాలు):",
+        form_message_label: "Emergency Details (సమస్య వివరాలు):",
+        form_location_label: "Location / Landmark in Visakhapatnam (ప్రాంతం):",
+        form_category_label: "Primary Need Category:",
+        btn_gps: "Grab GPS",
+        btn_submit_triage: "Submit SOS & Run AI Triage",
+        dispatch_title: "Shared Crisis Dispatch Board",
+        dispatch_subtitle: "APSDMA, Visakhapatnam District Administration & GVMC Central Incident Queue"
+      },
+      te: {
+        ctrl_room_title: "విశాఖపట్నం జిల్లా అత్యవసర కేంద్రం (EOC)",
+        tel_vizag_label: "కలెక్టరేట్ కంట్రోల్ రూమ్",
+        tel_kgh_label: "కేజీహెచ్ (KGH) అత్యవసర వార్డు",
+        tel_gvmc_label: "జీవీఎంసీ (GVMC) హెల్ప్‌లైన్",
+        tel_nat_label: "జాతీయ విపత్తు (112)",
+        speed_dial_title: "విశాఖ తక్షణ అత్యవసర హెల్ప్‌లైన్లు:",
+        speed_dial_sub: "రెస్క్యూ బృందాలకు నేరుగా ఫోన్ చేయడానికి నొక్కండి",
+        nav_home: "హోమ్",
+        nav_action: "ఎమర్జెన్సీ SOS",
+        nav_hospitals: "సమీప ఆసుపత్రులు",
+        nav_result: "డిస్పాచ్ బోర్డు",
+        nav_volunteers: "వాలంటీర్లు & NDRF",
+        nav_resources: "సహాయక సామాగ్రి",
+        nav_guides: "ఆఫ్‌లైన్ గైడ్",
+        nav_analytics: "విశ్లేషణలు",
+        btn_quick_sos: "SOS పంపండి",
+        nav_track_btn: "స్టేటస్ చెక్",
+        hero_pill: "విశాఖపట్నం & తీరప్రాంత విపత్తు స్పందన కేంద్రం",
+        hero_promise: "విశాఖలో వరద నీరు లేదా తుపానులో చిక్కుకున్నారా?",
+        hero_problem: "సహయోగ్AI విశాఖపట్నం, ఆర్కే బీచ్ తీరం, ఎంవీపీ కాలనీ మరియు గాజువాక ప్రాంతాల్లో తక్షణ రెస్క్యూ సమన్వయం చేస్తుంది. తెలుగు లేదా ఇంగ్లీషులో మాట్లాడండి. యాంటిగ్రావిటీ AI మీ అత్యవసర పరిస్థితిని విశ్లేషించి NDRF, నేవీ ENC మరియు కేజీహెచ్ ఆసుపత్రులను అప్రమత్తం చేస్తుంది. నెట్‌వర్క్ లేకపోయినా ఆఫ్‌లైన్‌లో పనిచేస్తుంది.",
+        btn_voice_sos: "వాయిస్ SOS (మైక్ నొక్కండి)",
+        hero_cta: "ఎమర్జెన్సీ ఫారమ్ నింపండి",
+        btn_nearby_hospitals: "సమీప ఆసుపత్రులు (GPS)",
+        btn_track_sos: "సహాయక స్థితిని చూడండి",
+        map_title: "విశాఖపట్నం ఇన్సిడెంట్ & ఆసుపత్రుల మ్యాప్",
+        map_subtitle: "విశాఖపట్నం తీరప్రాంతం అంతటా లైవ్ ఎమర్జెన్సీ కాల్స్ మరియు 10 ఆసుపత్రుల వివరాలు",
+        kpi_critical: "తీవ్రమైన అత్యవసర కేసులు",
+        kpi_volunteers: "సిద్ధంగా ఉన్న NDRF & వాలంటీర్లు",
+        kpi_resources: "విశాఖలో సహాయక నిల్వలు",
+        sos_badge: "త్వరిత పౌర SOS స్వీకరణ",
+        action_title: "ఎమర్జెన్సీ SOS & AI పరిస్థితి గుర్తింపు",
+        action_subtitle: "మైక్రోఫోన్ ద్వారా తెలుగు లేదా ఇంగ్లీషులో మాట్లాడండి. AI మీ అత్యవసర పరిస్థితిని గుర్తించి విశాఖపట్నం కంట్రోల్ రూమ్‌కు తక్షణమే సమాచారం అందిస్తుంది.",
+        mic_prompt: "మైక్ నొక్కి మీ అత్యవసర సమస్యను చెప్పండి (Speak Now)",
+        quick_chips_title: "1-టాప్ తక్షణ అవసరాల బటన్లు:",
+        form_message_label: "సమస్య పూర్తి వివరాలు:",
+        form_location_label: "విశాఖపట్నంలో మీ ప్రాంతం / ల్యాండ్‌మార్క్:",
+        form_category_label: "సహాయక విభాగం:",
+        btn_gps: "GPS లొకేషన్ గుర్తించండి",
+        btn_submit_triage: "SOS పంపండి & AI సహాయం పొందండి",
+        dispatch_title: "లైవ్ రెస్క్యూ డిస్పాచ్ బోర్డు",
+        dispatch_subtitle: "APSDMA, విశాఖపట్నం జిల్లా యంత్రాంగం & GVMC సెంట్రల్ క్యూ"
+      }
+    };
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'te' : 'en';
+      document.getElementById('langLabel').textContent = currentLang === 'en' ? 'తెలుగు (Telugu)' : 'English';
+      applyTranslations();
+      // Automatically keep voice speaking language in sync with active UI language
+      setVoiceSpeakingLanguage(currentLang, true);
+      showToast(currentLang === 'te' ? 'తెలుగు భాషకు మార్చబడింది (Switched to Telugu)' : 'Switched to English', 'info');
+    }
+
+    function applyTranslations() {
+      const dict = translations[currentLang] || translations.en;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict && dict[key]) el.textContent = dict[key];
+      });
+      if (currentLang === 'te') {
+        document.getElementById('subbrandText').textContent = 'సహయోగ్ • విశాఖపట్నం హబ్';
+      } else {
+        document.getElementById('subbrandText').textContent = 'సహయోగ్ • Visakhapatnam Hub';
+      }
+    }
+
+    // --- 4. VISAKHAPATNAM DEMO & OFFLINE SEED DATA ---
+    const SEED_INCIDENTS = [
+      {
+        _id: "inc-vzg-001",
+        ref: "INC-VZG-001",
+        locationDescription: "Jalaripeta Coastal Road, Near RK Beach, Visakhapatnam",
+        originalReport: "Cyclone storm surge water entered our house in Jalaripeta near Beach Road. 6 people stranded on terrace, grandmother needs urgent BP medicine and food.",
+        reportedCategory: "Medical Emergency",
+        category: "Medical Emergency",
+        effectiveUrgency: "Critical",
+        status: "awaiting_assignment",
+        createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+        aiTriage: {
+          source: "antigravity-ai",
+          incidentTitle: "Beach Road Inundation & Geriatric Medical Distress",
+          summary: "Severe coastal storm surge flooding entered residential homes near RK Beach. Elderly patient requires blood pressure medication; evacuation boat needed.",
+          immediateNeeds: ["NDRF / Navy Inflatable Boat", "BP Medicine", "Elderly Evacuation Support"],
+          hazards: ["High coastal storm surge", "Rising saltwater ingress"],
+          confidence: "high"
+        },
+        coordinates: { lat: 17.7126, lng: 83.3216 },
+        isDemo: true
+      },
+      {
+        _id: "inc-vzg-002",
+        ref: "INC-VZG-002",
+        locationDescription: "MVP Colony Sector 4, Near Double Road, Visakhapatnam",
+        originalReport: "Severe 18-hour cyclone power blackout in MVP Colony Sector 4. Diabetic patient needs cold-chain insulin pen urgently before 2 PM. Local medical shops flooded.",
+        reportedCategory: "Medical Emergency",
+        category: "Medical Emergency",
+        effectiveUrgency: "Critical",
+        status: "assigned",
+        createdAt: new Date(Date.now() - 30 * 60000).toISOString(),
+        assignments: [{ volunteerName: "Suresh (Indian Red Cross - Vizag Chapter)" }],
+        aiTriage: {
+          source: "antigravity-ai",
+          incidentTitle: "Time-Critical Insulin Cold-Chain Transport — MVP Colony",
+          summary: "Diabetic patient requiring refrigerated insulin delivery amidst prolonged 18-hour grid blackout in MVP Colony.",
+          immediateNeeds: ["Insulin pens (cold-chain)", "Ice packs & cool-box", "Medicover Hospital Coordination"],
+          hazards: ["Time-critical medical deadline", "Grid blackout"],
+          confidence: "high"
+        },
+        coordinates: { lat: 17.7408, lng: 83.3375 },
+        isDemo: true
+      },
+      {
+        _id: "inc-vzg-003",
+        ref: "INC-VZG-003",
+        locationDescription: "Fishing Harbour Beach Approach, Chengal Rao Peta, Visakhapatnam",
+        originalReport: "సముద్రపు నీరు రోడ్డు మీదకు వచ్చింది, ఇళ్లలోకి నీరు చేరింది. మేము 7 గురం డాబా మీద చిక్కుకున్నాము. చుట్టూ నీరు పెరుగుతోంది, వెంటనే బోటు పంపండి!",
+        reportedCategory: "Flooding",
+        category: "Flooding",
+        effectiveUrgency: "Critical",
+        status: "in_progress",
+        createdAt: new Date(Date.now() - 55 * 60000).toISOString(),
+        assignments: [{ volunteerName: "Team Sagar (Vizag Marine SAR & Fishermen Guild)" }],
+        aiTriage: {
+          source: "antigravity-ai",
+          incidentTitle: "Harbour Approach Terrace Stranded Evacuation",
+          summary: "Telugu SOS: Severe coastal storm surge inundated settlement near Port Harbour. 7 citizens stranded on terrace surrounded by rising seawater.",
+          immediateNeeds: ["NDRF Inflatable Zodiac Boat", "Emergency Life Jackets", "Coastal Evacuation Squad"],
+          hazards: ["High coastal storm surge", "Rapidly eroding foundation"],
+          confidence: "high"
+        },
+        coordinates: { lat: 17.6948, lng: 83.2980 },
+        isDemo: true
+      },
+      {
+        _id: "inc-vzg-004",
+        ref: "INC-VZG-004",
+        locationDescription: "Andhra University Campus Gymnasium Hall, Siripuram, Visakhapatnam",
+        originalReport: "Cyclone relief camp at Andhra University Gymnasium hall has 85 displaced coastal residents including 16 infants. Potable drinking water supply interrupted.",
+        reportedCategory: "Food & Drinking Water",
+        category: "Food & Drinking Water",
+        effectiveUrgency: "High",
+        status: "awaiting_assignment",
+        createdAt: new Date(Date.now() - 85 * 60000).toISOString(),
+        aiTriage: {
+          source: "antigravity-ai",
+          incidentTitle: "Relief Shelter Potable Water Shortage — AU Campus",
+          summary: "Evacuation camp with 85 residents and 16 infants suffering from interrupted municipal water supply. High risk of dehydration.",
+          immediateNeeds: ["Safe drinking water (20L cans)", "Infant formula & ORS kits", "Water purification tablets"],
+          hazards: ["High population density", "Infant dehydration risk"],
+          confidence: "high"
+        },
+        coordinates: { lat: 17.7280, lng: 83.3190 },
+        isDemo: true
+      },
+      {
+        _id: "inc-vzg-005",
+        ref: "INC-VZG-005",
+        locationDescription: "Jagadamba Centre Main Road, Near Old Post Office, Visakhapatnam",
+        originalReport: "Cyclone gale winds knocked down two 11kV live electrical cables into flooded street near Jagadamba Junction. Road completely blocked for ambulances heading to KGH Hospital.",
+        reportedCategory: "Roadblock & Fallen Trees",
+        category: "Roadblock & Fallen Trees",
+        effectiveUrgency: "High",
+        status: "submitted",
+        createdAt: new Date(Date.now() - 110 * 60000).toISOString(),
+        aiTriage: {
+          source: "antigravity-ai",
+          incidentTitle: "Live 11kV Cables on KGH Hospital Arterial Route",
+          summary: "Snapped live high-voltage power lines submerged in standing rainwater on Jagadamba corridor, severing emergency transport access to King George Hospital (KGH).",
+          immediateNeeds: ["APEPDCL Power Isolation Crew", "GVMC Road Debris Clearance Team"],
+          hazards: ["Live 11kV wire in standing water", "Blocks primary ambulance route to KGH"],
+          confidence: "high"
+        },
+        coordinates: { lat: 17.7107, lng: 83.3032 },
+        isDemo: true
+      }
+    ];
+
+    const SEED_VOLUNTEERS = [
+      {
+        _id: "vol-vzg-001",
+        displayName: "Suresh (Indian Red Cross - Vizag)",
+        username: "suresh_redcross",
+        role: "volunteer",
+        isActive: true,
+        profile: {
+          skills: ["First Aid", "Patient Triage", "Emergency Trauma Care"],
+          serviceArea: "Maharanipeta, Beach Road, Jagadamba",
+          teamAffiliation: "Indian Red Cross Society - Visakhapatnam",
+          availability: "available"
+        }
+      },
+      {
+        _id: "vol-vzg-002",
+        displayName: "Ananya (Andhra University NSS Cell)",
+        username: "ananya_nss",
+        role: "volunteer",
+        isActive: true,
+        profile: {
+          skills: ["Ration Distribution", "Relief Logistics", "Youth SAR Squad"],
+          serviceArea: "AU Campus, Siripuram, Waltair Uplands",
+          teamAffiliation: "Andhra University NSS Volunteer Wing",
+          availability: "available"
+        }
+      },
+      {
+        _id: "vol-vzg-003",
+        displayName: "Team Sagar (Vizag Marine SAR)",
+        username: "team_sagar",
+        role: "volunteer",
+        isActive: true,
+        profile: {
+          skills: ["Inflatable Boat Operation", "Deep Surf Rescue", "Flood Evacuation"],
+          serviceArea: "RK Beach, Jalaripeta, Fishing Harbour",
+          teamAffiliation: "Visakhapatnam Coastal Marine SAR Guild",
+          availability: "available"
+        }
+      },
+      {
+        _id: "vol-vzg-004",
+        displayName: "Team Garuda (NDRF / SDRF Auxiliary)",
+        username: "team_garuda",
+        role: "volunteer",
+        isActive: true,
+        profile: {
+          skills: ["Off-road 4x4 Transport", "Debris Clearance", "Heavy Evacuation"],
+          serviceArea: "Gajuwaka Industrial Corridor, MVP Colony",
+          teamAffiliation: "Andhra Pradesh SDRF Auxiliary Squad",
+          availability: "available"
+        }
+      }
+    ];
+
+    const SEED_RESOURCES = [
+      {
+        _id: "res-vzg-001",
+        ref: "RES-VZG-001",
+        name: "Packaged Safe Drinking Water (20L Cans)",
+        resourceType: "Drinking Water",
+        unit: "cans",
+        quantityTotal: 650,
+        quantityReserved: 40,
+        quantityDispatched: 90,
+        storageLocation: "GVMC Central Relief Warehouse, Jagadamba Centre",
+        responsibleOrg: "Greater Visakhapatnam Municipal Corporation (GVMC)",
+        status: "available"
+      },
+      {
+        _id: "res-vzg-002",
+        ref: "RES-VZG-002",
+        name: "Emergency Dry Ration Kits (Rice, Dal, Biscuits, ORS)",
+        resourceType: "Food Packets",
+        unit: "kits",
+        quantityTotal: 800,
+        quantityReserved: 60,
+        quantityDispatched: 180,
+        storageLocation: "Collectorate Emergency Depot, Maharanipeta",
+        responsibleOrg: "District Disaster Management Authority, Visakhapatnam",
+        status: "available"
+      },
+      {
+        _id: "res-vzg-003",
+        ref: "RES-VZG-003",
+        name: "Trauma First-Aid Kits & Snake Antivenom Vials",
+        resourceType: "First-Aid Kits",
+        unit: "kits",
+        quantityTotal: 120,
+        quantityReserved: 15,
+        quantityDispatched: 35,
+        storageLocation: "King George Hospital (KGH) Emergency Casualty Annex",
+        responsibleOrg: "KGH Emergency & Trauma Department, Maharanipeta",
+        status: "available"
+      },
+      {
+        _id: "res-vzg-004",
+        ref: "RES-VZG-004",
+        name: "Inflatable Zodiac Rescue Boats with Outboard Motors",
+        resourceType: "Boats",
+        unit: "boats",
+        quantityTotal: 8,
+        quantityReserved: 2,
+        quantityDispatched: 4,
+        storageLocation: "Visakhapatnam Fishing Harbour & Marine Police Depot",
+        responsibleOrg: "NDRF 10th Bn & Marine Coastal Police",
+        status: "limited"
+      },
+      {
+        _id: "res-vzg-005",
+        ref: "RES-VZG-005",
+        name: "Heavy-Duty Tarpaulin Sheets & Cyclone Blankets",
+        resourceType: "Blankets",
+        unit: "units",
+        quantityTotal: 450,
+        quantityReserved: 30,
+        quantityDispatched: 110,
+        storageLocation: "Port Indoor Stadium Relief Transit Camp",
+        responsibleOrg: "Indian Red Cross Society, Vizag",
+        status: "available"
+      }
+    ];
+
+    function getLocalDB() {
+      let db = localStorage.getItem('sahyog_vizag_mock_db');
+      if (!db) {
+        const initial = {
+          incidents: SEED_INCIDENTS,
+          volunteers: SEED_VOLUNTEERS,
+          resources: SEED_RESOURCES
+        };
+        localStorage.setItem('sahyog_vizag_mock_db', JSON.stringify(initial));
+        return initial;
+      }
+      return JSON.parse(db);
+    }
+
+    function saveLocalDB(data) {
+      localStorage.setItem('sahyog_vizag_mock_db', JSON.stringify(data));
+    }
+
+    // --- 5. HYBRID API CLIENT (ONLINE / SERVERLESS / ANTIGRAVITY OFFLINE) ---
+    async function api(endpoint, method = 'GET', body = null) {
+      const token = localStorage.getItem('sahyog_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token && token !== 'mock-local-token') headers['Authorization'] = 'Bearer ' + token;
+
+      if (window.location.protocol === 'file:') {
+        isServerConnected = false;
+        setModeBanner(false);
+        return handleLocalMockApi(endpoint, method, body);
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2800);
+
+      try {
+        const res = await fetch(API_BASE + endpoint, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : undefined,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          console.warn('Non-JSON response for ' + endpoint + '. Using local Antigravity engine.');
+          isServerConnected = false;
+          setModeBanner(false);
+          return handleLocalMockApi(endpoint, method, body);
+        }
+
+        const data = await res.json();
+        if (res.status === 404) {
+          isServerConnected = false;
+          setModeBanner(false);
+          return handleLocalMockApi(endpoint, method, body);
+        }
+
+        if (!res.ok) {
+          const err = new Error(data.error || data.message || ('HTTP ' + res.status));
+          err.status = res.status;
+          throw err;
+        }
+
+        isServerConnected = true;
+        setModeBanner(true);
+        return data;
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.status && err.status >= 400 && err.status < 500 && err.status !== 404) {
+          throw err;
+        }
+        isServerConnected = false;
+        setModeBanner(false);
+        return handleLocalMockApi(endpoint, method, body);
+      }
+    }
+
+    function setModeBanner(connected) {
+      const icon = document.getElementById('modeIcon');
+      const text = document.getElementById('modeText');
+      if (!icon || !text) return;
+
+      if (connected) {
+        icon.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+        text.innerHTML = '🟢 <strong>Connected:</strong> Live SahyogAI Backend • Visakhapatnam Crisis Grid (<code class="bg-slate-800 px-1.5 py-0.5 rounded text-orange-300">' + window.location.origin + '</code>)';
+      } else {
+        icon.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';
+        text.innerHTML = '🛡️ <strong>Antigravity Offline Mode:</strong> Local AI heuristic triage, Vizag hospital dispatch & indexed outbox active.';
+      }
+    }
+
+    function handleLocalMockApi(endpoint, method, body) {
+      const db = getLocalDB();
+
+      if (endpoint === '/health') {
+        return { status: 'ok', service: 'SahyogAI Vizag', operationalSector: 'Visakhapatnam, Andhra Pradesh' };
+      }
+      if (endpoint === '/auth/me') {
+        return { success: true, user: currentUser || { displayName: "Coordinator Venkat (GVMC EOC)", role: "coordinator", username: "coordinator" } };
+      }
+      if (endpoint === '/auth/login') {
+        const u = { displayName: "Coordinator Venkat (GVMC EOC)", role: "coordinator", username: body.username || "coordinator" };
+        currentUser = u;
+        return { success: true, token: 'mock-local-token', user: u };
+      }
+      if (endpoint.split('?')[0] === '/incidents' && method === 'GET') {
+        return { success: true, data: db.incidents, meta: { total: db.incidents.length } };
+      }
+      if (endpoint === '/incidents' && method === 'POST') {
+        const lower = (body.originalReport || '').toLowerCase();
+        const isCritical = lower.includes('water') || lower.includes('flood') || lower.includes('boat') || lower.includes('trapped') || lower.includes('blood') || lower.includes('వరద') || lower.includes('నీరు') || lower.includes('బోటు') || body.reportedCategory === 'Medical Emergency';
+
+        const newInc = {
+          _id: 'inc-vzg-' + Date.now(),
+          ref: 'INC-VZG-' + Date.now().toString(36).slice(-4).toUpperCase(),
+          ...body,
+          status: 'submitted',
+          effectiveUrgency: isCritical ? 'Critical' : 'High',
+          createdAt: new Date().toISOString(),
+          aiTriage: {
+            source: 'antigravity-edge-ai',
+            model: 'antigravity-vizag-v2.5',
+            recommendedUrgency: isCritical ? 'Critical' : 'High',
+            incidentTitle: (body.reportedCategory || 'Emergency') + ' — Visakhapatnam Sector',
+            summary: body.originalReport.slice(0, 140),
+            immediateNeeds: isCritical ? ["NDRF Rescue Boat", "108 Ambulance to KGH"] : ["GVMC Relief Squad"],
+            hazards: isCritical ? ["Rising floodwater / Life threat"] : [],
+            confidence: "high"
+          }
+        };
+        db.incidents.unshift(newInc);
+        saveLocalDB(db);
+        return { success: true, data: newInc };
+      }
+      if (endpoint === '/incidents/voice-triage' && method === 'POST') {
+        const situation = analyzeSpeechSituationLocally(body.text || '');
+        return {
+          success: true,
+          engine: 'Antigravity AI Situation Engine v2.5 (Offline Edge)',
+          transcript: body.text,
+          situation
+        };
+      }
+      if (endpoint.split('?')[0] === '/volunteers' && method === 'GET') {
+        return { success: true, data: db.volunteers };
+      }
+      if (endpoint.split('?')[0] === '/resources' && method === 'GET') {
+        return { success: true, data: db.resources };
+      }
+      if (endpoint === '/analytics/summary') {
+        return {
+          success: true,
+          data: {
+            incidents: { total: db.incidents.length, critical: 3, open: db.incidents.length },
+            volunteers: { total: db.volunteers.length, available: 4 },
+            resources: { total: db.resources.length }
+          }
+        };
+      }
+
+      return { success: true, data: [] };
+    }
+
+    // --- 6. HAVERSINE GPS DISTANCE CALCULATOR & HOSPITAL LOCATOR ---
+    function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // km
+    }
+
+    function getSortedHospitals(userLat, userLng) {
+      const list = VIZAG_HOSPITALS.map(h => {
+        const distKm = calculateHaversineDistance(userLat, userLng, h.lat, h.lng);
+        return { ...h, distanceKm: distKm };
+      });
+      list.sort((a, b) => a.distanceKm - b.distanceKm);
+      return list;
+    }
+
+    function updateNearbyHospitalsUI(coords) {
+      if (!coords || !coords.lat || !coords.lng) return;
+
+      const sorted = getSortedHospitals(coords.lat, coords.lng);
+      const closest = sorted[0];
+
+      // 1. Show the nearby hospital highlight card on the SOS screen
+      const card = document.getElementById('gpsNearbyHospitalsCard');
+      if (card && closest) {
+        card.classList.remove('hidden');
+        document.getElementById('nearestKmBadge').textContent = closest.distanceKm < 1
+          ? (Math.round(closest.distanceKm * 1000) + ' meters away')
+          : (closest.distanceKm.toFixed(1) + ' km away (~' + Math.max(2, Math.round(closest.distanceKm * 2.5)) + ' mins)');
+        
+        document.getElementById('closestHospName').textContent = closest.name;
+        document.getElementById('closestHospAddress').textContent = closest.address + ' • ' + closest.category;
+        document.getElementById('closestHospCallBtn').href = 'tel:' + (closest.emergencyPhone || closest.phone).replace(/[^0-9]/g, '');
+        document.getElementById('closestHospNavBtn').href = 'https://www.google.com/maps/dir/?api=1&destination=' + closest.lat + ',' + closest.lng;
+        document.getElementById('nearbyHospCountText').textContent = `${sorted.length} emergency hospitals monitored in Vizag sector`;
+      }
+
+      // 2. Also render the full hospital directory screen
+      renderHospitalsScreen(sorted);
+
+      // 3. Plot hospital markers on overview map
+      plotHospitalsOnMap(sorted, coords);
+    }
+
+    function renderHospitalsScreen(hospitalsList) {
+      const grid = document.getElementById('hospitalsGrid');
+      if (!grid) return;
+
+      const list = hospitalsList || VIZAG_HOSPITALS;
+      grid.innerHTML = list.map((h, idx) => {
+        const isNearest = idx === 0 && h.distanceKm !== undefined;
+        const distStr = h.distanceKm !== undefined
+          ? (h.distanceKm < 1 ? `${Math.round(h.distanceKm * 1000)} m away` : `${h.distanceKm.toFixed(1)} km away`)
+          : 'Vizag Central';
+
+        return `
+          <div class="bg-white rounded-3xl p-5 border ${isNearest ? 'border-2 border-emerald-500 shadow-lg' : 'border-slate-200 shadow-sm'} space-y-3.5 hover:border-orange-300 transition">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${h.isGovt ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}">
+                  ${h.isGovt ? 'Government Apex' : 'Private Super-Speciality'}
+                </span>
+                <h4 class="font-black text-slate-900 text-base leading-snug mt-1">${h.name}</h4>
+              </div>
+              <span class="px-2.5 py-1 rounded-xl text-xs font-black font-mono ${isNearest ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">
+                ${distStr}
+              </span>
+            </div>
+
+            <p class="text-xs text-slate-600 line-clamp-2">
+              <i class="fa-solid fa-location-dot text-orange-600 mr-1"></i>${h.address}
+            </p>
+
+            <div class="flex flex-wrap gap-1 text-[10px]">
+              ${(h.facilities || []).slice(0, 3).map(f => `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold">${f}</span>`).join('')}
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+              <a href="tel:${(h.emergencyPhone || h.phone).replace(/[^0-9]/g, '')}" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-phone text-[10px]"></i> Call: ${h.emergencyPhone || h.phone}
+              </a>
+              <a href="https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}" target="_blank" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition border border-slate-300 flex items-center gap-1">
+                <i class="fa-solid fa-location-arrow text-orange-600"></i> Route
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function triggerGPSImmediate() {
+      setTimeout(() => {
+        grabCurrentGPS();
+      }, 300);
+    }
+
+    // --- 7. GPS GRAB ---
+    function grabCurrentGPS() {
+      const badge = document.getElementById('gpsStatusBadge');
+      const text = document.getElementById('gpsStatusText');
+
+      if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser.', 'error');
+        return;
+      }
+
+      if (badge) badge.classList.remove('hidden');
+      if (text) text.textContent = 'Acquiring high-accuracy Visakhapatnam GPS fix...';
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          capturedCoordinates = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: Math.round(pos.coords.accuracy),
+            source: 'gps'
+          };
+          if (text) {
+            text.textContent = '📍 GPS Locked: Lat ' + capturedCoordinates.lat.toFixed(4) + ', Lng ' + capturedCoordinates.lng.toFixed(4) + ' (±' + capturedCoordinates.accuracy + 'm accuracy)';
+          }
+          if (badge) badge.className = 'text-xs text-emerald-600 font-semibold mt-2 flex items-center gap-1.5';
+          showToast('GPS coordinates locked. Calculating nearby Vizag hospitals...', 'success');
+
+          // Trigger automated nearby hospital detection
+          updateNearbyHospitalsUI(capturedCoordinates);
+
+          // Reverse fill location text if empty
+          const locInput = document.getElementById('sosLocationText');
+          if (locInput && (!locInput.value || locInput.value.length < 5)) {
+            locInput.value = `Near GPS ${capturedCoordinates.lat.toFixed(4)}, ${capturedCoordinates.lng.toFixed(4)} (Visakhapatnam Sector)`;
+          }
+        },
+        (err) => {
+          // Fallback to central Visakhapatnam RK Beach coordinates if denied or offline
+          capturedCoordinates = {
+            lat: 17.7126,
+            lng: 83.3216,
+            accuracy: 50,
+            source: 'default_vizag_beach_road'
+          };
+          if (text) {
+            text.textContent = '⚠️ Using Visakhapatnam Coastal Reference (' + err.message + ')';
+          }
+          if (badge) badge.className = 'text-xs text-amber-600 font-semibold mt-2 flex items-center gap-1.5';
+          updateNearbyHospitalsUI(capturedCoordinates);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    }
+
+    function selectVizagLandmark(val) {
+      if (!val) return;
+      document.getElementById('sosLocationText').value = val;
+
+      // Coordinate mapping for quick landmarks
+      const landmarkCoords = {
+        "King George Hospital (KGH)": { lat: 17.7083, lng: 83.3072 },
+        "RK Beach": { lat: 17.7126, lng: 83.3216 },
+        "Jagadamba": { lat: 17.7107, lng: 83.3032 },
+        "MVP Colony": { lat: 17.7408, lng: 83.3375 },
+        "Gajuwaka": { lat: 17.6908, lng: 83.2094 },
+        "Rushikonda": { lat: 17.7816, lng: 83.3854 },
+        "Port": { lat: 17.6948, lng: 83.2980 },
+        "Health City": { lat: 17.7663, lng: 83.3325 },
+        "Simhachalam": { lat: 17.7665, lng: 83.2508 },
+        "Madhurawada": { lat: 17.8048, lng: 83.3562 }
+      };
+
+      for (const [key, coords] of Object.entries(landmarkCoords)) {
+        if (val.includes(key)) {
+          capturedCoordinates = { ...coords, accuracy: 20, source: 'landmark_picker' };
+          updateNearbyHospitalsUI(capturedCoordinates);
+          break;
+        }
+      }
+    }
+
+    // --- 8. AUDIO VISUALIZER & RECORDING ENGINE (WEB AUDIO API) ---
+    function initAudioVisualizer(stream) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        audioContext = new AudioCtx();
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 64;
+
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyserNode);
+
+        const canvas = document.getElementById('audioVisualizer');
+        if (!canvas) return;
+        const canvasCtx = canvas.getContext('2d');
+        const bufferLength = analyserNode.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        function draw() {
+          visualizerAnimationId = requestAnimationFrame(draw);
+          analyserNode.getByteFrequencyData(dataArray);
+
+          canvasCtx.fillStyle = '#FFFFFF';
+          canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+          const barWidth = (canvas.width / bufferLength) * 1.8;
+          let barHeight;
+          let x = 0;
+
+          for (let i = 0; i < bufferLength; i++) {
+            barHeight = (dataArray[i] / 255) * canvas.height * 0.9;
+
+            // Vibrant gradient: red to orange
+            canvasCtx.fillStyle = isRecordingVoice ? `rgb(${Math.min(255, 180 + dataArray[i])}, 40, 20)` : '#CBD5E1';
+            canvasCtx.beginPath();
+            canvasCtx.roundRect(x, (canvas.height - barHeight) / 2, barWidth - 2, Math.max(3, barHeight), 2);
+            canvasCtx.fill();
+
+            x += barWidth + 1;
+          }
+        }
+        draw();
+      } catch (err) {
+        console.warn('Audio visualizer setup notice:', err);
+      }
+    }
+
+    function stopAudioVisualizer() {
+      if (visualizerAnimationId) {
+        cancelAnimationFrame(visualizerAnimationId);
+        visualizerAnimationId = null;
+      }
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(() => {});
+        audioContext = null;
+      }
+      const canvas = document.getElementById('audioVisualizer');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // --- 9. ROBUST VOICE SOS ENGINE (MIC + WEBSPEECH + HUGGING FACE WHISPER) ---
+    function triggerVoiceDirectly() {
+      setTimeout(() => {
+        toggleVoiceSOS();
+      }, 350);
+    }
+
+    // Set voice speaking language dynamically (Telugu or English)
+    function setVoiceSpeakingLanguage(lang, silent = false) {
+      voiceSpeakingLang = lang === 'en' ? 'en' : 'te';
+      const btnTe = document.getElementById('btnVoiceLangTe');
+      const btnEn = document.getElementById('btnVoiceLangEn');
+      const checkTe = document.getElementById('checkVoiceTe');
+      const checkEn = document.getElementById('checkVoiceEn');
+      const badge = document.getElementById('voiceActiveLangBadge');
+      const micStatus = document.getElementById('voiceMicStatus');
+
+      if (voiceSpeakingLang === 'te') {
+        if (btnTe) {
+          btnTe.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 bg-orange-600 text-white shadow-md shadow-orange-600/30';
+        }
+        if (btnEn) {
+          btnEn.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200';
+        }
+        if (checkTe) checkTe.classList.remove('hidden');
+        if (checkEn) checkEn.classList.add('hidden');
+        if (badge) {
+          badge.textContent = 'తెలుగు (Telugu - te-IN)';
+          badge.className = 'text-orange-700 font-bold bg-orange-100 px-2 py-0.5 rounded-md';
+        }
+        if (!isRecordingVoice && micStatus) {
+          micStatus.textContent = 'Press Mic & Speak Your Emergency (మైక్ నొక్కి మాట్లాడండి)';
+        }
+      } else {
+        if (btnTe) {
+          btnTe.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200';
+        }
+        if (btnEn) {
+          btnEn.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 bg-orange-600 text-white shadow-md shadow-orange-600/30';
+        }
+        if (checkTe) checkTe.classList.add('hidden');
+        if (checkEn) checkEn.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = 'English (Indian - en-IN)';
+          badge.className = 'text-blue-700 font-bold bg-blue-100 px-2 py-0.5 rounded-md';
+        }
+        if (!isRecordingVoice && micStatus) {
+          micStatus.textContent = 'Press Mic & Speak Your Emergency in English';
+        }
+      }
+
+      // If recognition is active, seamlessly restart with the newly selected language model
+      if (isRecordingVoice && speechRecognitionInstance) {
+        try {
+          speechRecognitionInstance.stop(); // onend will auto-restart with new lang
+        } catch (_) {}
+      }
+
+      if (!silent) {
+        showToast(voiceSpeakingLang === 'te' 
+          ? 'వాయిస్ మైక్: తెలుగు భాష సిద్ధం (Voice mic set to Telugu - te-IN)' 
+          : 'Voice mic set to English (en-IN)', 'info');
+      }
+    }
+
+    // Insert spoken phrase preset for quick victim intake
+    function insertSpokenPhrase(phrase) {
+      const reportInput = document.getElementById('sosReportText');
+      if (reportInput) {
+        reportInput.value = (reportInput.value ? reportInput.value + ' ' : '') + phrase;
+        speechFinalTranscript = reportInput.value;
+        updateCharCount();
+        runVoiceSituationRecognition(reportInput.value);
+        showToast('Spoken phrase loaded & analyzed: ' + phrase.slice(0, 30) + '...', 'success');
+      }
+    }
+
+    // Toggle Voice SOS recording and real-time speech recognition
+    async function toggleVoiceSOS() {
+      const micBtn = document.getElementById('voiceSosBtn');
+      const micStatus = document.getElementById('voiceMicStatus');
+      const micRipple = document.getElementById('micRipple');
+      const reportInput = document.getElementById('sosReportText');
+
+      if (isRecordingVoice) {
+        // ---- STOP RECORDING ----
+        isRecordingVoice = false;
+        if (micRipple) micRipple.classList.add('hidden');
+        if (speechRecognitionInstance) {
+          try { speechRecognitionInstance.stop(); } catch (_) {}
+        }
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          try { mediaRecorder.stop(); } catch (_) {}
+        }
+        if (audioStream) {
+          audioStream.getTracks().forEach(t => t.stop());
+          audioStream = null;
+        }
+        stopAudioVisualizer();
+
+        micBtn.classList.remove('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
+        micBtn.classList.add('bg-white', 'text-orange-600', 'border-orange-500');
+        micStatus.textContent = voiceSpeakingLang === 'te'
+          ? 'మైక్ నొక్కి మాట్లాడండి (Press Mic & Speak)'
+          : 'Press Mic & Speak Your Emergency';
+
+        // Trigger AI Situation Recognition on current text
+        if (reportInput.value.trim().length > 3) {
+          runVoiceSituationRecognition(reportInput.value.trim());
+          showToast('Antigravity AI situation recognition completed for voice report', 'success');
+        }
+        return;
+      }
+
+      // ---- START RECORDING ----
+      // Preserve existing text so user does not lose previously typed notes
+      speechFinalTranscript = (reportInput.value || '').trim();
+
+      // 1. Audio stream & visualizer initialization
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          initAudioVisualizer(audioStream);
+
+          // Start MediaRecorder for Hugging Face audio upload
+          recordedAudioChunks = [];
+          try {
+            mediaRecorder = new MediaRecorder(audioStream);
+            mediaRecorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
+            };
+            mediaRecorder.onstop = async () => {
+              const audioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' });
+              if (audioBlob.size > 1000) {
+                await processHuggingFaceAudio(audioBlob);
+              }
+            };
+            mediaRecorder.start(500);
+          } catch (_mrErr) {
+            console.warn('MediaRecorder notice; Web Speech API will handle live transcription.');
+          }
+        }
+      } catch (err) {
+        console.warn('Microphone permission notice:', err);
+        showToast('Please allow microphone access when prompted by your browser.', 'warning');
+      }
+
+      // 2. Initialize Web Speech API for low-latency live transcription
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        if (speechRecognitionInstance) {
+          try { speechRecognitionInstance.abort(); } catch (_) {}
+        }
+        speechRecognitionInstance = new SpeechRecognition();
+        speechRecognitionInstance.continuous = true;
+        speechRecognitionInstance.interimResults = true;
+        speechRecognitionInstance.lang = voiceSpeakingLang === 'te' ? 'te-IN' : 'en-IN';
+
+        speechRecognitionInstance.onstart = () => {
+          isRecordingVoice = true;
+          if (micRipple) micRipple.classList.remove('hidden');
+          micBtn.classList.add('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
+          micBtn.classList.remove('bg-white', 'text-orange-600', 'border-orange-500');
+          micStatus.textContent = voiceSpeakingLang === 'te'
+            ? 'వింటూ ఉన్నాం... తెలుగులో మాట్లాడండి (Listening in Telugu...)'
+            : 'Listening... Speak your emergency in English now';
+        };
+
+        speechRecognitionInstance.onresult = (event) => {
+          let interimTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const piece = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              speechFinalTranscript += (speechFinalTranscript ? ' ' : '') + piece.trim();
+            } else {
+              interimTranscript += piece;
+            }
+          }
+          const combined = [speechFinalTranscript, interimTranscript].filter(Boolean).join(' ').trim();
+          if (combined) {
+            reportInput.value = combined;
+            updateCharCount();
+            // Live real-time situation recognition as victim speaks
+            runVoiceSituationRecognition(combined);
+          }
+        };
+
+        speechRecognitionInstance.onerror = (event) => {
+          console.warn('Speech recognition notice:', event.error);
+          if (event.error === 'not-allowed') {
+            showToast('Microphone access denied. Tap the lock icon in your browser address bar to allow mic.', 'error');
+            isRecordingVoice = false;
+            if (micRipple) micRipple.classList.add('hidden');
+            micBtn.classList.remove('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
+            micBtn.classList.add('bg-white', 'text-orange-600', 'border-orange-500');
+            micStatus.textContent = 'Microphone permission blocked. Please allow mic in browser settings.';
+          } else if (event.error === 'no-speech') {
+            micStatus.textContent = voiceSpeakingLang === 'te'
+              ? 'వాయిస్ వినపడలేదు... మైక్ దగ్గర మాట్లాడండి (Listening...)'
+              : 'No speech detected yet. Speak closer to mic...';
+          } else if (event.error === 'network') {
+            micStatus.textContent = 'Network speech notice. Recording locally for AI triage...';
+          }
+        };
+
+        speechRecognitionInstance.onend = () => {
+          // If user did not manually stop, seamlessly restart listening
+          if (isRecordingVoice) {
+            try {
+              speechRecognitionInstance.lang = voiceSpeakingLang === 'te' ? 'te-IN' : 'en-IN';
+              speechRecognitionInstance.start();
+            } catch (_) {}
+          }
+        };
+
+        try {
+          speechRecognitionInstance.start();
+          isRecordingVoice = true;
+        } catch (e) {
+          console.error('Speech recognition start failed:', e);
+          isRecordingVoice = true;
+        }
+      } else {
+        // Fallback for browsers without Web Speech API
+        isRecordingVoice = true;
+        if (micRipple) micRipple.classList.remove('hidden');
+        micBtn.classList.add('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
+        micBtn.classList.remove('bg-white', 'text-orange-600', 'border-orange-500');
+        micStatus.textContent = 'Recording Voice Audio... Press mic again when done to transcribe';
+        showToast('Microphone active. Audio will be transcribed by Hugging Face AI.', 'info');
+      }
+    }
+
+    // Process audio via Hugging Face Inference or Backend
+    async function processHuggingFaceAudio(blob) {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result;
+        const hfToken = localStorage.getItem('sahyog_hf_token') || '';
+        const hfModel = localStorage.getItem('sahyog_hf_model') || 'openai/whisper-large-v3-turbo';
+
+        try {
+          const res = await api('/incidents/voice-triage', 'POST', {
+            audioBase64: base64Audio,
+            hfToken,
+            model: hfModel,
+            location: document.getElementById('sosLocationText').value || 'Visakhapatnam',
+            category: document.getElementById('sosCategorySelect').value
+          });
+
+          if (res && res.transcript) {
+            const reportInput = document.getElementById('sosReportText');
+            if (!reportInput.value || reportInput.value.length < 5) {
+              reportInput.value = res.transcript;
+              speechFinalTranscript = res.transcript;
+              updateCharCount();
+            }
+          }
+          if (res && res.situation) {
+            applyRecognizedSituationToUI(res.situation);
+          }
+        } catch (err) {
+          console.warn('Hugging Face backend audio triage note:', err.message);
+        }
+      };
+    }
+
+    // --- 10. VOICE-TO-EMERGENCY SITUATION RECOGNITION AI ---
+    // Multi-dialect Visakhapatnam crisis heuristic engine (Telugu Script + Tanglish + English)
+    function analyzeSpeechSituationLocally(text) {
+      const lower = text.toLowerCase();
+
+      let type = "Severe Flash Flooding & Stranded Coastal Victims";
+      let urgency = "Critical";
+      let category = "Flooding";
+      let responder = "NDRF 10th Bn & Marine Police Inflatable Gemini Boats";
+      let hospital = "King George Hospital (KGH), Maharanipeta";
+      let reassurance = "Stay calm on the highest concrete floor or terrace. Do not step into flowing floodwater. NDRF rescue boat and 108 medical team notified.";
+      const immediateNeeds = ["NDRF Zodiac Boat", "Life Jackets", "108 ALS Ambulance"];
+
+      // 1. Critical Trauma & Cardiac / Blood / Unconscious / Snake Bite
+      if (
+        lower.includes('heart') || lower.includes('cardiac') || lower.includes('chest') ||
+        lower.includes('blood') || lower.includes('bleeding') || lower.includes('unconscious') ||
+        lower.includes('faint') || lower.includes('breath') || lower.includes('oxygen') ||
+        lower.includes('injury') || lower.includes('wound') || lower.includes('snake') ||
+        lower.includes('bite') || lower.includes('kgh') || lower.includes('ambulance') ||
+        lower.includes('రక్తం') || lower.includes('గుండె') || lower.includes('స్పృహ') ||
+        lower.includes('శ్వాస') || lower.includes('గాయం') || lower.includes('ఆసుపత్రి') ||
+        lower.includes('కేజీహెచ్') || lower.includes('అంబులెన్స్') || lower.includes('పాము') ||
+        lower.includes('gunde') || lower.includes('raktam') || lower.includes('spruha') ||
+        lower.includes('swasa') || lower.includes('gayam') || lower.includes('pamu')
+      ) {
+        type = "Critical Trauma & Cardiac Emergency";
+        urgency = "Critical";
+        category = "Medical Emergency";
+        responder = "108 Advanced Life Support Ambulance & KGH Trauma Cell";
+        hospital = "King George Hospital (KGH) Trauma Center / CARE Hospital";
+        reassurance = "Apply firm direct pressure to bleeding with clean cloth. Keep victim flat and warm. 108 Emergency Ambulance prioritized for your coordinates.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("108 ALS Cardiac Ambulance", "Oxygen Supply", "KGH Level-1 Trauma Admission");
+      }
+      // 2. High-Voltage Electric Wire / Current Shock / Transformer Blast
+      else if (
+        lower.includes('wire') || lower.includes('cable') || lower.includes('current') ||
+        lower.includes('electric') || lower.includes('shock') || lower.includes('spark') ||
+        lower.includes('transformer') || lower.includes('pole') ||
+        lower.includes('వైరు') || lower.includes('కరెంట్') || lower.includes('విద్యుత్') ||
+        lower.includes('షాక్') || lower.includes('నిప్పు') || lower.includes('ట్రాన్స్‌ఫార్మర్') ||
+        lower.includes('vairu') || lower.includes('current shock')
+      ) {
+        type = "Fallen High-Voltage Live Electrical Cable";
+        urgency = "High";
+        category = "Roadblock & Fallen Trees";
+        responder = "APEPDCL Grid Isolation Emergency Squad";
+        hospital = "KGH Burn Unit, Maharanipeta";
+        reassurance = "Stay at least 15 meters away from the live wire and standing water. Warn nearby citizens. APEPDCL power isolation crew alerted.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("APEPDCL Power Isolation", "Road Debris Clearance");
+      }
+      // 3. Emergency Childbirth & High-Risk Maternal / Infant Distress
+      else if (
+        lower.includes('pregnant') || lower.includes('pregnancy') || lower.includes('labor') ||
+        lower.includes('delivery') || lower.includes('baby') || lower.includes('infant') ||
+        lower.includes('newborn') || lower.includes('victoria') || lower.includes('ghosha') ||
+        lower.includes('గర్భిణీ') || lower.includes('డెలివరీ') || lower.includes('ప్రసవం') ||
+        lower.includes('నొప్పులు') || lower.includes('శిశువు') || lower.includes('బిడ్డ') ||
+        lower.includes('విక్టోరియా') || lower.includes('garbhini') || lower.includes('prasavam')
+      ) {
+        type = "Emergency Childbirth & Infant Distress";
+        urgency = "Critical";
+        category = "Medical Emergency";
+        responder = "108 Obstetrics SAR Escort & Female EMTs";
+        hospital = "Govt Victoria Hospital for Women & Children (Ghosha) / KGH";
+        reassurance = "Keep mother lying down comfortably on clean bedding. Keep infant warm. Advanced obstetrics ambulance dispatched.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("Obstetrics Ambulance", "Baby Warmth Kit", "Victoria Hospital Maternity Admission");
+      }
+      // 4. Critical Food & Potable Safe Drinking Water Shortage
+      else if (
+        lower.includes('food') || lower.includes('hungry') || lower.includes('starving') ||
+        lower.includes('drinking water') || lower.includes('thirsty') || lower.includes('milk') ||
+        lower.includes('ration') || lower.includes('packet') || lower.includes('meals') ||
+        lower.includes('ఆహారం') || lower.includes('తిండి') || lower.includes('ఆకలి') ||
+        lower.includes('తాగునీరు') || lower.includes('మంచినీళ్లు') || lower.includes('పాలు') ||
+        lower.includes('aakali') || lower.includes('tindi') || lower.includes('manchineellu')
+      ) {
+        type = "Critical Food & Safe Potable Water Shortage";
+        urgency = "High";
+        category = "Food & Drinking Water";
+        responder = "GVMC Central Relief Supply Logistics & Red Cross";
+        hospital = "KGH Community Health Cell";
+        reassurance = "Do not drink untreated floodwater. Safe packaged water cans and GVMC dry ration kits are being dispatched to your sector.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("Packaged Safe Water (20L Cans)", "Dry Ration Kits", "ORS Packets");
+      }
+      // 5. Cyclone Gale / Fallen Trees / Roadblocks / Landslides (Simhachalam, Kailasagiri)
+      else if (
+        lower.includes('cyclone') || lower.includes('storm') || lower.includes('wind') ||
+        lower.includes('tree') || lower.includes('collapse') || lower.includes('wall') ||
+        lower.includes('landslide') || lower.includes('mudslide') || lower.includes('simhachalam') ||
+        lower.includes('kailasagiri') || lower.includes('తుఫాను') || lower.includes('గాలివాన') ||
+        lower.includes('చెట్టు') || lower.includes('కూలింది') || lower.includes('గోడ') ||
+        lower.includes('కొండచరియలు') || lower.includes('toofanu') || lower.includes('galivana') ||
+        lower.includes('kondachariyalu')
+      ) {
+        type = "Cyclone Gale Debris & Structure Compromise";
+        urgency = "High";
+        category = "Roadblock & Fallen Trees";
+        responder = "GVMC Disaster Response Force & JCB Earthmovers";
+        hospital = "SevenHills Hospital / VIMS Multi Speciality";
+        reassurance = "Stay inside reinforced concrete structures away from glass panes. Road clearance heavy equipment alerted.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("Power Saws for Tree Removal", "JCB Heavy Excavators", "Structural Shoring");
+      }
+      // 6. Default: Severe Flood & Inundation
+      else {
+        type = "Severe Inundation & Stranded Coastal Flood Distress";
+        urgency = "Critical";
+        category = "Flooding";
+        responder = "NDRF 10th Bn & Coast Guard Inflatable Gemini Boats";
+        hospital = "King George Hospital (KGH) Casualty";
+        reassurance = "Stay on highest solid roof. Do not touch electrical switches. Signal with bright cloth or phone torch. Rescue boat dispatched.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("NDRF Inflatable Gemini Boat", "Drinking Water Cans", "Life Jackets");
+      }
+
+      // Check for landmark detection in spoken text and suggest location
+      let suggestedLocation = "";
+      if (lower.includes('mvp') || lower.includes('colony')) {
+        suggestedLocation = "MVP Colony, Visakhapatnam";
+      } else if (lower.includes('beach') || lower.includes('jalaripeta') || lower.includes('rk beach')) {
+        suggestedLocation = "Jalaripeta / RK Beach Road, Visakhapatnam";
+      } else if (lower.includes('gajuwaka')) {
+        suggestedLocation = "Gajuwaka Industrial Belt, Visakhapatnam";
+      } else if (lower.includes('kgh') || lower.includes('maharanipeta')) {
+        suggestedLocation = "Maharanipeta, Near KGH, Visakhapatnam";
+      } else if (lower.includes('simhachalam')) {
+        suggestedLocation = "Simhachalam Foothills, Visakhapatnam";
+      } else if (lower.includes('madhurawada') || lower.includes('rushikonda')) {
+        suggestedLocation = "Madhurawada / Rushikonda, Visakhapatnam";
+      } else if (lower.includes('jagadamba')) {
+        suggestedLocation = "Jagadamba Junction, Visakhapatnam";
+      }
+
+      return {
+        type,
+        urgency,
+        category,
+        recommendedResponder: responder,
+        recommendedHospital: hospital,
+        reassurance,
+        immediateNeeds,
+        suggestedLocation
+      };
+    }
+
+    function runVoiceSituationRecognition(text) {
+      if (!text || text.length < 3) return;
+      const situation = analyzeSpeechSituationLocally(text);
+      applyRecognizedSituationToUI(situation);
+    }
+
+    function applyRecognizedSituationToUI(situation) {
+      if (!situation) return;
+
+      const card = document.getElementById('aiSituationCard');
+      if (card) {
+        card.classList.remove('hidden');
+        card.classList.add('animate-fadeIn');
+      }
+
+      const titleEl = document.getElementById('aiSituationTitle');
+      const urgencyEl = document.getElementById('aiSituationUrgency');
+      const reassuranceEl = document.getElementById('aiSituationReassurance');
+      const responderEl = document.getElementById('aiSituationResponder');
+      const hospitalEl = document.getElementById('aiSituationHospital');
+      const catSelect = document.getElementById('sosCategorySelect');
+      const locInput = document.getElementById('sosLocationText');
+
+      if (titleEl) titleEl.textContent = situation.type;
+      if (urgencyEl) {
+        urgencyEl.textContent = situation.urgency;
+        urgencyEl.className = 'px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ' +
+          (situation.urgency === 'Critical' ? 'badge-critical' : 'badge-high');
+      }
+      if (reassuranceEl) reassuranceEl.textContent = situation.reassurance;
+      if (responderEl) responderEl.textContent = situation.recommendedResponder;
+      
+      // If user has GPS location, dynamically append nearest hospital distance
+      if (hospitalEl) {
+        if (currentUserCoords && VIZAG_HOSPITALS && VIZAG_HOSPITALS.length > 0) {
+          let closest = VIZAG_HOSPITALS[0];
+          let minDist = 9999;
+          VIZAG_HOSPITALS.forEach(h => {
+            const d = calculateHaversineDistance(currentUserCoords.lat, currentUserCoords.lng, h.lat, h.lng);
+            if (d < minDist) { minDist = d; closest = h; }
+          });
+          hospitalEl.innerHTML = situation.recommendedHospital + ' <span class="text-orange-600 font-extrabold">(Nearest via Live GPS: ' + closest.name + ' - ' + minDist.toFixed(1) + ' km away)</span>';
+        } else {
+          hospitalEl.textContent = situation.recommendedHospital;
+        }
+      }
+
+      if (catSelect && situation.category && (!catSelect.value || catSelect.value === 'Flooding')) {
+        catSelect.value = situation.category;
+      }
+
+      if (locInput && situation.suggestedLocation && !locInput.value) {
+        locInput.value = situation.suggestedLocation;
+      }
+    }
+
+    // --- 11. 1-TAP NEED PRESET CHIPS ---
+    function applyNeedChip(type) {
+      const report = document.getElementById('sosReportText');
+      const cat = document.getElementById('sosCategorySelect');
+
+      if (type === 'boat') {
+        cat.value = 'Flooding';
+        report.value = (report.value ? report.value + ' | ' : '') + (currentLang === 'te'
+          ? 'వరద నీరు చేరింది, డాబా మీద చిక్కుకున్నాము. వెంటనే ఎన్డీఆర్ఎఫ్ రెస్క్యూ బోట్ (NDRF Rescue Boat) పంపండి.'
+          : 'Urgent rescue boat needed. Water entered house/terrace. Send NDRF boat immediately.');
+      } else if (type === 'medical') {
+        cat.value = 'Medical Emergency';
+        report.value = (report.value ? report.value + ' | ' : '') + (currentLang === 'te'
+          ? 'తీవ్రమైన వైద్య అత్యవసర పరిస్థితి. రోగిని తక్షణమే కేజీహెచ్ ఆసుపత్రికి (KGH Hospital) తరలించడానికి అంబులెన్స్ కావాలి.'
+          : 'Critical medical emergency. Patient needs urgent transport to King George Hospital (KGH).');
+      } else if (type === 'water') {
+        cat.value = 'Food & Drinking Water';
+        report.value = (report.value ? report.value + ' | ' : '') + (currentLang === 'te'
+          ? 'తాగునీరు లేదు, చుట్టూ మురికి నీరు చేరింది. తక్షణమే సురక్షితమైన తాగునీటి క్యాన్లు పంపండి.'
+          : 'Safe drinking water urgently required. Surrounding water sources contaminated.');
+      } else if (type === 'food') {
+        cat.value = 'Food & Drinking Water';
+        report.value = (report.value ? report.value + ' | ' : '') + (currentLang === 'te'
+          ? 'ఆహార సామాగ్రి నిండుకుంది, పిల్లలు మరియు వృద్ధులు ఆకలితో ఉన్నారు. తక్షణమే ఆహార పొట్లాలు పంపండి.'
+          : 'Food supplies exhausted. Infants and seniors need immediate ready-to-eat dry rations.');
+      } else if (type === 'trapped') {
+        cat.value = 'Trapped / Missing People';
+        report.value = (report.value ? report.value + ' | ' : '') + (currentLang === 'te'
+          ? 'ఇంటి పైకప్పు మీద లేదా గదిలో చిక్కుకున్నాము. మార్గం మొత్తం మూసుకుపోయింది. రక్షించండి.'
+          : 'Stranded on rooftop. Surrounding access roads fully submerged. Urgent evacuation needed.');
+      } else if (type === 'electric') {
+        cat.value = 'Roadblock & Fallen Trees';
+        report.value = (report.value ? report.value + ' | ' : '') + (currentLang === 'te'
+          ? 'నీటిలో 11kV కరెంట్ వైరు తెగిపడింది. తీవ్రమైన విద్యుత్ ప్రమాదం. తక్షణమే విద్యుత్ సరఫరా ఆపండి.'
+          : 'Live high-voltage electrical cable snapped into standing water. Extreme shock hazard.');
+      }
+
+      updateCharCount();
+      runVoiceSituationRecognition(report.value);
+    }
+
+    // --- 12. OFFLINE DIRECT SMS SOS FALLBACK ---
+    function sendOfflineSMS() {
+      const report = document.getElementById('sosReportText').value.trim() || 'Emergency SOS reported in Visakhapatnam.';
+      const location = document.getElementById('sosLocationText').value.trim() || 'Visakhapatnam';
+      const lat = capturedCoordinates ? capturedCoordinates.lat.toFixed(4) : '17.7126';
+      const lng = capturedCoordinates ? capturedCoordinates.lng.toFixed(4) : '83.3216';
+      const ref = 'SOS-VZG-' + Math.floor(1000 + Math.random() * 9000);
+
+      const smsBody = encodeURIComponent(`EMERGENCY SOS VIZAG: ${report.slice(0, 100)}. Location: ${location}, GPS: ${lat},${lng}. Ref: ${ref}`);
+      // Send to National Emergency 112 or Vizag District EOC 1077
+      const smsUrl = `sms:112?body=${smsBody}`;
+      window.location.href = smsUrl;
+      showToast('Opening native SMS with pre-filled Vizag GPS coordinates...', 'info');
+    }
+
+    // --- 13. SUBMIT SOS & AI TRIAGE ---
+    async function submitSOS(e) {
+      e.preventDefault();
+      const report = document.getElementById('sosReportText').value.trim();
+      const location = document.getElementById('sosLocationText').value.trim();
+      const category = document.getElementById('sosCategorySelect').value || null;
+      const countRange = document.getElementById('sosPeopleCount').value;
+      const phone = document.getElementById('sosContactPhone').value.trim();
+
+      if (!report || !location) {
+        showToast('Please provide emergency details and location.', 'warning');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btnSubmitSOS');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⟳</span> Antigravity AI Triaging in Progress...';
+
+      const payload = {
+        originalReport: report,
+        locationDescription: location,
+        reportedCategory: category,
+        affectedCountRange: countRange,
+        contactPhone: phone || undefined,
+        coordinates: capturedCoordinates || { lat: 17.7126, lng: 83.3216, source: 'manual_vizag' }
+      };
+
+      try {
+        const res = await api('/incidents', 'POST', payload);
+        const inc = res.data;
+
+        // Display Receipt Card
+        document.getElementById('receiptRefBadge').textContent = inc.ref;
+        document.getElementById('receiptRefValue').textContent = inc.ref;
+        document.getElementById('sosReceiptCard').classList.remove('hidden');
+        document.getElementById('sosForm').classList.add('hidden');
+
+        showToast('Emergency registered: ' + inc.ref + '. Urgency: ' + (inc.effectiveUrgency || 'Critical'), 'success');
+        
+        fetchIncidents();
+      } catch (err) {
+        showToast('Submission notice: ' + err.message, 'info');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Submit SOS & Run AI Triage';
+      }
+    }
+
+    function resetSOSForm() {
+      document.getElementById('sosReportText').value = '';
+      document.getElementById('sosLocationText').value = '';
+      document.getElementById('sosReceiptCard').classList.add('hidden');
+      document.getElementById('sosForm').classList.remove('hidden');
+      document.getElementById('aiSituationCard')?.classList.add('hidden');
+      updateCharCount();
+    }
+
+    function copyReceiptRef() {
+      const ref = document.getElementById('receiptRefValue').textContent;
+      navigator.clipboard.writeText(ref);
+      showToast('Reference copied to clipboard: ' + ref, 'success');
+    }
+
+    // --- 14. TRACKING MODAL ---
+    function openTrackModal() {
+      document.getElementById('trackModal').classList.remove('hidden');
+      const tIn = document.getElementById('trackInputRef');
+      if (tIn && typeof tIn.focus === 'function') tIn.focus();
+    }
+    function closeTrackModal() {
+      document.getElementById('trackModal').classList.add('hidden');
+      document.getElementById('trackResultBox').classList.add('hidden');
+    }
+
+    async function lookupTrackStatus() {
+      const ref = document.getElementById('trackInputRef').value.trim().toUpperCase();
+      const box = document.getElementById('trackResultBox');
+      if (!ref) return;
+
+      const db = getLocalDB();
+      const match = db.incidents.find(i => i.ref === ref || (i.ref && i.ref.endsWith(ref)));
+
+      box.classList.remove('hidden');
+      if (match) {
+        box.innerHTML = `
+          <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200">
+            <div class="flex justify-between font-black text-slate-900">
+              <span>${match.ref}</span>
+              <span class="text-xs uppercase px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-800 font-bold">${match.status}</span>
+            </div>
+            <p class="text-slate-700 mt-1.5"><strong>Location:</strong> ${match.locationDescription}</p>
+            <p class="text-slate-700"><strong>Urgency:</strong> <span class="text-red-600 font-black">${match.effectiveUrgency}</span></p>
+            <p class="text-slate-700"><strong>AI Triage:</strong> ${match.aiTriage?.summary || 'Under review by Visakhapatnam EOC'}</p>
+          </div>
+        `;
+      } else {
+        box.innerHTML = `
+          <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-amber-800">
+            No incident matching <strong>${ref}</strong> found. Ensure the code is exact or check your connection.
+          </div>
+        `;
+      }
+    }
+
+    // --- 15. LEAFLET MAPS INTEGRATION (VISAKHAPATNAM, AP) ---
+    function initMaps() {
+      if (overviewMap) return;
+      const mapEl = document.getElementById('liveOverviewMap');
+      if (!mapEl) return;
+
+      // Visakhapatnam coordinates: 17.6868, 83.2185
+      overviewMap = L.map('liveOverviewMap').setView([17.7126, 83.3216], 12);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors | APSDMA Visakhapatnam'
+      }).addTo(overviewMap);
+
+      overviewMarkersLayer = L.layerGroup().addTo(overviewMap);
+      hospitalMarkersLayer = L.layerGroup().addTo(overviewMap);
+
+      renderMapMarkers();
+      plotHospitalsOnMap(VIZAG_HOSPITALS);
+    }
+
+    function recenterVizagMap() {
+      if (!overviewMap) return;
+      overviewMap.setView([17.7126, 83.3216], 12);
+    }
+
+    function renderMapMarkers() {
+      if (!overviewMarkersLayer || !overviewMap) return;
+      overviewMarkersLayer.clearLayers();
+
+      const db = getLocalDB();
+      (db.incidents || []).forEach(inc => {
+        if (!inc.coordinates || !inc.coordinates.lat || !inc.coordinates.lng) return;
+
+        const isCritical = inc.effectiveUrgency === 'Critical';
+        const color = isCritical ? '#DC2626' : (inc.effectiveUrgency === 'High' ? '#D97706' : '#4F46E5');
+
+        const circle = L.circleMarker([inc.coordinates.lat, inc.coordinates.lng], {
+          radius: isCritical ? 10 : 7,
+          fillColor: color,
+          color: '#FFFFFF',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.85
+        });
+
+        circle.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4;">
+            <strong style="color: #0F172A;">${inc.ref}</strong>
+            <span style="display:inline-block; margin-left:4px; padding: 1px 6px; border-radius:4px; font-weight:bold; background:${color}20; color:${color}">${inc.effectiveUrgency}</span>
+            <div style="margin-top:4px; color:#475569;">${inc.locationDescription}</div>
+            <div style="margin-top:4px; font-weight:600;">${inc.originalReport.slice(0, 80)}...</div>
+          </div>
+        `);
+
+        overviewMarkersLayer.addLayer(circle);
+      });
+    }
+
+    function plotHospitalsOnMap(hospitals, userCoords) {
+      if (!hospitalMarkersLayer || !overviewMap) return;
+      hospitalMarkersLayer.clearLayers();
+
+      // If userCoords provided, plot victim location beacon
+      if (userCoords && userCoords.lat && userCoords.lng) {
+        const victimBeacon = L.circleMarker([userCoords.lat, userCoords.lng], {
+          radius: 11,
+          fillColor: '#2563EB',
+          color: '#FFFFFF',
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 0.9
+        });
+        victimBeacon.bindPopup(`<strong>📍 Your GPS Location</strong><br>Visakhapatnam Sector`);
+        hospitalMarkersLayer.addLayer(victimBeacon);
+      }
+
+      (hospitals || VIZAG_HOSPITALS).forEach(h => {
+        const hospMarker = L.circleMarker([h.lat, h.lng], {
+          radius: 8,
+          fillColor: '#16A34A',
+          color: '#FFFFFF',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.9
+        });
+
+        const distStr = h.distanceKm !== undefined ? ` • ${h.distanceKm.toFixed(1)} km away` : '';
+        hospMarker.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4;">
+            <strong style="color: #166534;">🏥 ${h.name}</strong>
+            <div style="font-size: 11px; color: #475569; margin-top:2px;">${h.category}${distStr}</div>
+            <div style="margin-top:4px;">
+              <a href="tel:${(h.emergencyPhone || h.phone).replace(/[^0-9]/g, '')}" style="color: #DC2626; font-weight: bold; text-decoration: none;">
+                📞 Call: ${h.emergencyPhone || h.phone}
+              </a>
+            </div>
+          </div>
+        `);
+
+        hospitalMarkersLayer.addLayer(hospMarker);
+      });
+    }
+
+    // --- 16. DATA FETCHERS & INCIDENTS UI ---
+    async function fetchIncidents(isSilent = false) {
+      try {
+        const res = await api('/incidents');
+        incidents = res.data || [];
+        renderIncidentsGrid();
+        renderMapMarkers();
+        updateKPIs();
+      } catch (err) {
+        if (!isSilent) console.warn('Fetch incidents fallback to local store.');
+        const db = getLocalDB();
+        incidents = db.incidents;
+        renderIncidentsGrid();
+        renderMapMarkers();
+        updateKPIs();
+      }
+    }
+
+    function renderIncidentsGrid() {
+      const container = document.getElementById('incidentsGrid');
+      if (!container) return;
+
+      if (!incidents.length) {
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white rounded-3xl border border-slate-200">No active incidents reported in Visakhapatnam.</div>';
+        return;
+      }
+
+      container.innerHTML = incidents.map(inc => {
+        const isCritical = inc.effectiveUrgency === 'Critical';
+        const badgeClass = isCritical ? 'badge-critical' : (inc.effectiveUrgency === 'High' ? 'badge-high' : 'badge-medium');
+        const dateStr = new Date(inc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm hover:border-orange-300 transition space-y-3 cursor-pointer" onclick="openIncidentDetail('${inc._id || inc.id}')">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-xs bg-slate-100 text-slate-800 px-2.5 py-1 rounded-xl">${inc.ref}</span>
+                <span class="text-xs font-black px-2.5 py-0.5 rounded-full ${badgeClass}">${inc.effectiveUrgency}</span>
+                <span class="text-xs text-slate-500 font-semibold">${inc.category || 'General'}</span>
+              </div>
+              <span class="text-xs text-slate-400 font-mono">${dateStr}</span>
+            </div>
+            
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm leading-snug">${inc.aiTriage?.incidentTitle || inc.locationDescription}</h4>
+              <p class="text-xs text-slate-600 mt-1 line-clamp-2">${inc.originalReport}</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+              <div class="flex items-center gap-1 text-slate-500">
+                <i class="fa-solid fa-location-dot text-orange-600"></i>
+                <span class="truncate max-w-xs">${inc.locationDescription}</span>
+              </div>
+              <span class="font-bold uppercase tracking-wider text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">${inc.status}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateKPIs() {
+      const criticalCount = incidents.filter(i => i.effectiveUrgency === 'Critical' && i.status !== 'resolved').length;
+      const kpiEl = document.getElementById('kpiCriticalCount');
+      if (kpiEl) kpiEl.textContent = criticalCount;
+    }
+
+    function filterUrgency(urgency) {
+      ['all', 'critical', 'high', 'medium', 'low'].forEach(u => {
+        const el = document.getElementById('filter-' + u);
+        if (el) {
+          el.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition ' + (u === urgency.toLowerCase() ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200');
+        }
+      });
+
+      const db = getLocalDB();
+      if (urgency === 'ALL') {
+        incidents = db.incidents;
+      } else {
+        incidents = db.incidents.filter(i => i.effectiveUrgency === urgency);
+      }
+      renderIncidentsGrid();
+    }
+
+    function openIncidentDetail(id) {
+      const db = getLocalDB();
+      const inc = incidents.find(i => i._id === id || i.id === id) || db.incidents.find(i => i._id === id);
+      if (!inc) return;
+
+      currentModalIncident = inc;
+      document.getElementById('modalRef').textContent = inc.ref;
+      document.getElementById('modalUrgencyBadge').textContent = inc.effectiveUrgency;
+      document.getElementById('modalUrgencyBadge').className = 'ml-2 text-xs font-bold px-2 py-0.5 rounded-full ' + (inc.effectiveUrgency === 'Critical' ? 'badge-critical' : 'badge-high');
+
+      const body = document.getElementById('modalBody');
+      body.innerHTML = `
+        <div class="space-y-3 text-xs text-slate-700">
+          <div>
+            <strong class="text-slate-900 block text-sm">Location:</strong>
+            <span class="text-slate-600">${inc.locationDescription}</span>
+          </div>
+          <div>
+            <strong class="text-slate-900 block text-sm">Emergency Report:</strong>
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 mt-1">${inc.originalReport}</div>
+          </div>
+          ${inc.aiTriage ? `
+            <div class="p-3.5 bg-orange-50 rounded-2xl border border-orange-200 text-orange-950 space-y-1.5">
+              <span class="font-bold block text-sm text-orange-900"><i class="fa-solid fa-robot"></i> Antigravity AI Triage (${inc.aiTriage.source}):</span>
+              <div><strong>Summary:</strong> ${inc.aiTriage.summary}</div>
+              <div><strong>Immediate Needs:</strong> ${(inc.aiTriage.immediateNeeds || []).join(', ')}</div>
+            </div>
+          ` : ''}
+          <div>
+            <strong class="text-slate-900 block">Status:</strong>
+            <span class="font-mono uppercase font-bold text-orange-700">${inc.status}</span>
+          </div>
+        </div>
+      `;
+
+      const actions = document.getElementById('modalActions');
+      actions.innerHTML = `
+        <button onclick="updateIncidentStatus('${inc._id || inc.id}', 'verified')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs">Verify Incident</button>
+        <button onclick="updateIncidentStatus('${inc._id || inc.id}', 'resolved')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">Mark Resolved</button>
+      `;
+
+      document.getElementById('incidentModal').classList.remove('hidden');
+
+      setTimeout(() => {
+        if (!modalMiniMap) {
+          modalMiniMap = L.map('miniMap').setView([inc.coordinates?.lat || 17.7126, inc.coordinates?.lng || 83.3216], 14);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(modalMiniMap);
+        } else {
+          modalMiniMap.setView([inc.coordinates?.lat || 17.7126, inc.coordinates?.lng || 83.3216], 14);
+        }
+      }, 200);
+    }
+
+    function closeIncidentModal() {
+      document.getElementById('incidentModal').classList.add('hidden');
+    }
+
+    function updateIncidentStatus(id, newStatus) {
+      const db = getLocalDB();
+      const inc = db.incidents.find(i => i._id === id || i.id === id);
+      if (inc) {
+        inc.status = newStatus;
+        saveLocalDB(db);
+        showToast('Incident status updated to ' + newStatus, 'success');
+        closeIncidentModal();
+        fetchIncidents();
+      }
+    }
+
+    // --- 17. VOLUNTEERS & RESOURCES FETCHERS ---
+    async function fetchVolunteers() {
+      const res = await api('/volunteers');
+      volunteersList = res.data || SEED_VOLUNTEERS;
+      const tbody = document.getElementById('volunteersTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = volunteersList.map(v => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-4 font-bold text-slate-900">${v.displayName}</td>
+          <td class="py-3 px-4 text-slate-600">${v.profile?.teamAffiliation || 'Volunteer'}<br><span class="text-[11px] text-slate-400">${v.profile?.serviceArea || 'Visakhapatnam'}</span></td>
+          <td class="py-3 px-4 text-slate-500">${(v.profile?.skills || []).join(', ')}</td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">${v.profile?.availability || 'Available'}</span></td>
+          <td class="py-3 px-4 text-right"><button class="bg-orange-600 text-white px-3 py-1 rounded-xl text-xs font-bold hover:bg-orange-700 shadow-sm">Dispatch</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function fetchResources() {
+      const res = await api('/resources');
+      resourcesList = res.data || SEED_RESOURCES;
+      const grid = document.getElementById('resourcesGrid');
+      if (!grid) return;
+
+      grid.innerHTML = resourcesList.map(r => {
+        const avail = Math.max(0, r.quantityTotal - (r.quantityReserved || 0) - (r.quantityDispatched || 0));
+        return `
+          <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-orange-600">${r.resourceType}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">${r.ref || 'RES'}</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-base leading-snug">${r.name}</h4>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-black text-slate-900">${avail}</span>
+              <span class="text-xs text-slate-500 font-bold uppercase">${r.unit} available</span>
+            </div>
+            <div class="text-[11px] text-slate-500 space-y-1 border-t border-slate-100 pt-2">
+              <div>Depot: <strong>${r.storageLocation || 'GVMC Hub'}</strong></div>
+              <div>Authority: <strong>${r.responsibleOrg || 'APSDMA Vizag'}</strong></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- 18. CHARTS & ANALYTICS ---
+    function loadAnalytics() {
+      const ctxUrgency = document.getElementById('urgencyChart')?.getContext('2d');
+      const ctxCategory = document.getElementById('categoryChart')?.getContext('2d');
+
+      if (ctxUrgency) {
+        new Chart(ctxUrgency, {
+          type: 'doughnut',
+          data: {
+            labels: ['Critical', 'High', 'Medium', 'Low'],
+            datasets: [{
+              data: [3, 2, 1, 0],
+              backgroundColor: ['#DC2626', '#D97706', '#4F46E5', '#16A34A'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+
+      if (ctxCategory) {
+        new Chart(ctxCategory, {
+          type: 'bar',
+          data: {
+            labels: ['Flooding', 'Medical', 'Trapped', 'Food/Water', 'Roadblock'],
+            datasets: [{
+              label: 'Reported Incidents',
+              data: [4, 3, 2, 2, 1],
+              backgroundColor: '#EA580C',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          }
+        });
+      }
+    }
+
+    // --- 19. NAVIGATION & ROUTING CONTROLLER ---
+    function navigate(screenName) {
+      const screens = ['home', 'action', 'hospitals', 'result', 'guides', 'volunteers', 'resources', 'analytics'];
+      screens.forEach(s => {
+        const el = document.getElementById('screen-' + s);
+        if (el) el.classList.add('hidden');
+      });
+
+      const activeEl = document.getElementById('screen-' + screenName);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      // Update desktop nav
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+      const navTarget = document.getElementById('nav-' + screenName);
+      if (navTarget) navTarget.classList.add('active');
+
+      // Update mobile bottom nav
+      document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+      const mobileTarget = document.getElementById('mobile-tab-' + screenName);
+      if (mobileTarget) mobileTarget.classList.add('active');
+
+      if (typeof window.scrollTo === 'function') {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      }
+
+      if (screenName === 'home') setTimeout(initMaps, 100);
+      if (screenName === 'hospitals') renderHospitalsScreen();
+      if (screenName === 'result') fetchIncidents();
+      if (screenName === 'volunteers') fetchVolunteers();
+      if (screenName === 'resources') fetchResources();
+      if (screenName === 'analytics') loadAnalytics();
+    }
+
+    function toggleMobileNav() {
+      document.getElementById('mobileNavDrawer').classList.toggle('hidden');
+    }
+    function closeMobileNav() {
+      document.getElementById('mobileNavDrawer').classList.add('hidden');
+    }
+
+    // --- 20. ANTIGRAVITY & HUGGING FACE MODALS ---
+    function openAntigravityModal() {
+      document.getElementById('antigravityModal').classList.remove('hidden');
+    }
+    function closeAntigravityModal() {
+      document.getElementById('antigravityModal').classList.add('hidden');
+    }
+
+    function openHfConfigModal() {
+      const token = localStorage.getItem('sahyog_hf_token') || '';
+      const model = localStorage.getItem('sahyog_hf_model') || 'openai/whisper-large-v3-turbo';
+      document.getElementById('hfApiKeyInput').value = token;
+      document.getElementById('hfModelSelect').value = model;
+      document.getElementById('hfConfigModal').classList.remove('hidden');
+    }
+    function closeHfConfigModal() {
+      document.getElementById('hfConfigModal').classList.add('hidden');
+    }
+    function saveHfConfig() {
+      const token = document.getElementById('hfApiKeyInput').value.trim();
+      const model = document.getElementById('hfModelSelect').value;
+      if (token) localStorage.setItem('sahyog_hf_token', token);
+      else localStorage.removeItem('sahyog_hf_token');
+      localStorage.setItem('sahyog_hf_model', model);
+      document.getElementById('hfStatusLabel').textContent = token ? 'Hugging Face AI: Custom Token Active' : 'Hugging Face AI: Standard Whisper';
+      showToast('Hugging Face AI settings updated successfully.', 'success');
+      closeHfConfigModal();
+    }
+
+    // --- 21. AUTHENTICATION & SESSION HANDLING ---
+    async function initAuth() {
+      const token = localStorage.getItem('sahyog_token');
+      if (!token) {
+        currentUser = { displayName: "Coordinator Venkat (GVMC EOC)", role: "coordinator", username: "coordinator" };
+        renderAuthUI(currentUser);
+        return;
+      }
+      try {
+        const res = await api('/auth/me');
+        currentUser = res.user || { displayName: "Coordinator Venkat (GVMC EOC)", role: "coordinator", username: "coordinator" };
+        renderAuthUI(currentUser);
+      } catch (err) {
+        currentUser = { displayName: "Coordinator Venkat (GVMC EOC)", role: "coordinator", username: "coordinator" };
+        renderAuthUI(currentUser);
+      }
+    }
+
+    function renderAuthUI(user) {
+      const container = document.getElementById('authContainer');
+      if (!container) return;
+      if (user) {
+        container.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-700 hidden lg:inline">${user.displayName}</span>
+            <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span class="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function openLoginModal() {
+      document.getElementById('loginModal').classList.remove('hidden');
+    }
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value;
+      const p = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await api('/auth/login', 'POST', { username: u, password: p });
+        localStorage.setItem('sahyog_token', res.token || 'mock-local-token');
+        currentUser = res.user;
+        renderAuthUI(currentUser);
+        closeLoginModal();
+        showToast('Welcome, ' + currentUser.displayName, 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('sahyog_token');
+      currentUser = null;
+      renderAuthUI(null);
+      showToast('Signed out successfully.', 'info');
+      setTimeout(() => location.reload(), 400);
+    }
+
+    // --- 22. UTILITIES & TOASTS ---
+    function updateCharCount() {
+      const text = document.getElementById('sosReportText')?.value || '';
+      const countEl = document.getElementById('charCount');
+      if (countEl) countEl.textContent = text.length + ' / 5000 chars';
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-red-600 text-white',
+        warning: 'bg-amber-500 text-slate-900',
+        info: 'bg-slate-900 text-white border border-slate-700'
+      };
+
+      toast.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 transform transition-all duration-300 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Global Window Bindings for product-level fault tolerance
+    window.navigate = navigate;
+    window.toggleVoiceSOS = toggleVoiceSOS;
+    window.applyNeedChip = applyNeedChip;
+    window.grabCurrentGPS = grabCurrentGPS;
+    window.submitSOS = submitSOS;
+    window.fetchIncidents = fetchIncidents;
+    window.filterUrgency = filterUrgency;
+    window.openIncidentDetail = openIncidentDetail;
+    window.closeIncidentModal = closeIncidentModal;
+    window.updateIncidentStatus = updateIncidentStatus;
+    window.fetchVolunteers = fetchVolunteers;
+    window.fetchResources = fetchResources;
+    window.loadAnalytics = loadAnalytics;
+    window.toggleLanguage = toggleLanguage;
+    window.openTrackModal = openTrackModal;
+    window.closeTrackModal = closeTrackModal;
+    window.lookupTrackStatus = lookupTrackStatus;
+    window.copyReceiptRef = copyReceiptRef;
+    window.openLoginModal = openLoginModal;
+    window.closeLoginModal = closeLoginModal;
+    window.handleLogin = handleLogin;
+    window.handleLogout = handleLogout;
+    window.toggleMobileNav = toggleMobileNav;
+    window.closeMobileNav = closeMobileNav;
+    window.resetSOSForm = resetSOSForm;
+    window.triggerVoiceDirectly = triggerVoiceDirectly;
+    window.setVoiceSpeakingLanguage = setVoiceSpeakingLanguage;
+    window.insertSpokenPhrase = insertSpokenPhrase;
+    window.triggerGPSImmediate = triggerGPSImmediate;
+    window.sendOfflineSMS = sendOfflineSMS;
+    window.openAntigravityModal = openAntigravityModal;
+    window.closeAntigravityModal = closeAntigravityModal;
+    window.openHfConfigModal = openHfConfigModal;
+    window.closeHfConfigModal = closeHfConfigModal;
+    window.saveHfConfig = saveHfConfig;
+    window.selectVizagLandmark = selectVizagLandmark;
+    window.recenterVizagMap = recenterVizagMap;
+
+    // Startup Initialization
+    window.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('sosReportText')?.addEventListener('input', updateCharCount);
+      await initAuth();
+      initMaps();
+      await fetchIncidents();
+      renderHospitalsScreen();
+      applyTranslations();
+
+      // Check if custom Hugging Face key is stored
+      if (localStorage.getItem('sahyog_hf_token')) {
+        const lbl = document.getElementById('hfStatusLabel');
+        if (lbl) lbl.textContent = 'Hugging Face AI: Custom Token Active';
+      }
+
+      // Automatically grab GPS if on mobile to immediately show closest medical centers
+      if (window.innerWidth < 768 && navigator.geolocation) {
+        setTimeout(grabCurrentGPS, 1200);
+      }
+    });
+  </script>
+
+  <!-- Offline-First Architecture Hooks -->
+  <script src="/offline/offlineDB.js"></script>
+  <script src="/offline/syncEngine.js"></script>
+  <script src="/offline/OfflineStatusBanner.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration:', err));
+    }
+  </script>
+</body>
+</html>

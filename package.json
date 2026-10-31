@@ -5,6 +5,7 @@
   "main": "server/src/app.js",
   "scripts": {
     "start": "node server/src/app.js",
+    "build": "node -e \"console.log('SahyogAI Vizag Build Ready')\"",
     "test": "cd server && npm test",
     "seed": "node server/src/utils/seed.js"
   },

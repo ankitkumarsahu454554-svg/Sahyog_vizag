@@ -82,7 +82,24 @@ const globalLimiter = rateLimit({
 });
 app.use('/api/', globalLimiter);
 
-// ---- Health check (unauthenticated) ----
+// ---- Root API & Health check (unauthenticated) ----
+app.get(['/api', '/api/'], (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'SahyogAI Vizag API - Powered by Antigravity AI Engine v2.5',
+    region: 'Visakhapatnam, Andhra Pradesh',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      incidents: '/api/incidents',
+      voiceTriage: '/api/incidents/voice-triage',
+      volunteers: '/api/volunteers',
+      resources: '/api/resources',
+      analytics: '/api/analytics'
+    }
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -148,4 +165,3 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL && require.main === m
 }
 
 module.exports = app; // for testing and serverless deployment
-

@@ -462,18 +462,61 @@
           <canvas id="audioVisualizer" width="400" height="40" class="w-full h-full"></canvas>
         </div>
 
+        <!-- Tactile Voice Speaking Language Selector (Direct 1-Tap Toggle) -->
+        <div class="w-full max-w-md bg-white/95 p-2 rounded-2xl border border-orange-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 pl-1">
+            <i class="fa-solid fa-microphone-lines text-orange-600 text-sm"></i>
+            <span class="text-xs font-black text-slate-700 uppercase tracking-wider" id="voiceLangLabelTitle">Speaking Language:</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full sm:w-auto justify-center">
+            <button type="button" id="btnVoiceLangTe" onclick="setVoiceSpeakingLanguage('te')" class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 bg-orange-600 text-white shadow-md shadow-orange-600/30">
+              <i class="fa-solid fa-check text-[10px]" id="checkVoiceTe"></i>
+              <span>తెలుగు (te-IN)</span>
+            </button>
+            <button type="button" id="btnVoiceLangEn" onclick="setVoiceSpeakingLanguage('en')" class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200">
+              <i class="fa-solid fa-check text-[10px] hidden" id="checkVoiceEn"></i>
+              <span>English (en-IN)</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Big Tactile Microphone Button -->
-        <button id="voiceSosBtn" onclick="toggleVoiceSOS()" class="w-24 h-24 rounded-full bg-white text-orange-600 border-4 border-orange-500 shadow-xl hover:scale-105 active:scale-95 transition flex items-center justify-center text-4xl cursor-pointer">
-          <i id="voiceMicIcon" class="fa-solid fa-microphone"></i>
-        </button>
+        <div class="relative flex items-center justify-center my-1">
+          <div id="micRipple" class="hidden absolute w-32 h-32 rounded-full bg-red-500/25 animate-ping pointer-events-none"></div>
+          <button id="voiceSosBtn" onclick="toggleVoiceSOS()" class="w-24 h-24 rounded-full bg-white text-orange-600 border-4 border-orange-500 shadow-xl hover:scale-105 active:scale-95 transition flex items-center justify-center text-4xl cursor-pointer relative z-10" aria-label="Toggle Voice SOS Recording">
+            <i id="voiceMicIcon" class="fa-solid fa-microphone"></i>
+          </button>
+        </div>
 
         <div>
-          <span id="voiceMicStatus" class="font-extrabold text-slate-900 text-base block" data-i18n="mic_prompt">
-            Press Mic & Speak Your Emergency (మైక్ నొక్కి మాట్లాడండి)
+          <span id="voiceMicStatus" class="font-extrabold text-slate-900 text-base sm:text-lg block" data-i18n="mic_prompt">
+            Press Mic &amp; Speak Your Emergency (మైక్ నొక్కి మాట్లాడండి)
           </span>
-          <span class="text-xs text-slate-500 block pt-1">
-            Real-time Continuous Speech • Telugu (తెలుగు) & Indian English • Hugging Face Whisper Ready
-          </span>
+          <div id="voiceMicSubstatus" class="text-xs text-slate-600 block pt-1 font-medium">
+            Active Language: <strong id="voiceActiveLangBadge" class="text-orange-700 font-bold bg-orange-100 px-2 py-0.5 rounded-md">తెలుగు (Telugu - te-IN)</strong> • Continuous Speech • Hugging Face Whisper Ready
+          </div>
+        </div>
+
+        <!-- 1-Tap Quick Spoken Emergency Presets -->
+        <div class="w-full max-w-md pt-1">
+          <span class="text-[11px] font-bold text-slate-500 block mb-1.5">Or tap spoken phrases to simulate voice distress (ఒక్క నొక్కుతో అత్యవసర వాక్యాలు):</span>
+          <div class="flex flex-wrap items-center justify-center gap-1.5">
+            <button type="button" onclick="insertSpokenPhrase('వరద నీరు పెరుగుతోంది ఇల్లు మునిగిపోతుంది బోటు కావాలి')" class="px-2.5 py-1 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-900 text-[11px] font-bold transition flex items-center gap-1 border border-orange-200 shadow-xs">
+              <i class="fa-solid fa-water text-blue-500"></i> "వరద నీరు బోటు కావాలి"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('తీవ్ర రక్తస్రావం గుండె నొప్పి కేజీహెచ్ అంబులెన్స్ వెంటనే పంపండి')" class="px-2.5 py-1 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-[11px] font-bold transition flex items-center gap-1 border border-red-200 shadow-xs">
+              <i class="fa-solid fa-truck-medical text-red-600"></i> "రక్తస్రావం కేజీహెచ్"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('గర్భిణీ స్త్రీకి ప్రసవ నొప్పులు విక్టోరియా ఘోషా ఆసుపత్రి అంబులెన్స్')" class="px-2.5 py-1 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-900 text-[11px] font-bold transition flex items-center gap-1 border border-pink-200 shadow-xs">
+              <i class="fa-solid fa-person-breastfeeding text-pink-600"></i> "గర్భిణీ డెలివరీ"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('Current wire fallen in flood water spark electric shock')" class="px-2.5 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-bold transition flex items-center gap-1 border border-amber-200 shadow-xs">
+              <i class="fa-solid fa-bolt text-amber-600"></i> "Electric Shock Wire"
+            </button>
+            <button type="button" onclick="insertSpokenPhrase('Severe flood water trapped on rooftop in MVP Colony Vizag need boat')" class="px-2.5 py-1 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-900 text-[11px] font-bold transition flex items-center gap-1 border border-blue-200 shadow-xs">
+              <i class="fa-solid fa-life-ring text-blue-600"></i> "MVP Colony Flood Boat"
+            </button>
+          </div>
         </div>
 
         <!-- Hugging Face AI Mode Controls -->
@@ -1159,6 +1202,8 @@
     // Speech & Web Audio visualizer state
     let speechRecognitionInstance = null;
     let isRecordingVoice = false;
+    let voiceSpeakingLang = 'te'; // 'te' (te-IN Telugu) or 'en' (en-IN English)
+    let speechFinalTranscript = '';
     let audioStream = null;
     let audioContext = null;
     let analyserNode = null;
@@ -1384,6 +1429,8 @@
       currentLang = currentLang === 'en' ? 'te' : 'en';
       document.getElementById('langLabel').textContent = currentLang === 'en' ? 'తెలుగు (Telugu)' : 'English';
       applyTranslations();
+      // Automatically keep voice speaking language in sync with active UI language
+      setVoiceSpeakingLanguage(currentLang, true);
       showToast(currentLang === 'te' ? 'తెలుగు భాషకు మార్చబడింది (Switched to Telugu)' : 'Switched to English', 'info');
     }
 
@@ -2051,19 +2098,92 @@
       }, 350);
     }
 
+    // Set voice speaking language dynamically (Telugu or English)
+    function setVoiceSpeakingLanguage(lang, silent = false) {
+      voiceSpeakingLang = lang === 'en' ? 'en' : 'te';
+      const btnTe = document.getElementById('btnVoiceLangTe');
+      const btnEn = document.getElementById('btnVoiceLangEn');
+      const checkTe = document.getElementById('checkVoiceTe');
+      const checkEn = document.getElementById('checkVoiceEn');
+      const badge = document.getElementById('voiceActiveLangBadge');
+      const micStatus = document.getElementById('voiceMicStatus');
+
+      if (voiceSpeakingLang === 'te') {
+        if (btnTe) {
+          btnTe.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 bg-orange-600 text-white shadow-md shadow-orange-600/30';
+        }
+        if (btnEn) {
+          btnEn.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200';
+        }
+        if (checkTe) checkTe.classList.remove('hidden');
+        if (checkEn) checkEn.classList.add('hidden');
+        if (badge) {
+          badge.textContent = 'తెలుగు (Telugu - te-IN)';
+          badge.className = 'text-orange-700 font-bold bg-orange-100 px-2 py-0.5 rounded-md';
+        }
+        if (!isRecordingVoice && micStatus) {
+          micStatus.textContent = 'Press Mic & Speak Your Emergency (మైక్ నొక్కి మాట్లాడండి)';
+        }
+      } else {
+        if (btnTe) {
+          btnTe.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200';
+        }
+        if (btnEn) {
+          btnEn.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 bg-orange-600 text-white shadow-md shadow-orange-600/30';
+        }
+        if (checkTe) checkTe.classList.add('hidden');
+        if (checkEn) checkEn.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = 'English (Indian - en-IN)';
+          badge.className = 'text-blue-700 font-bold bg-blue-100 px-2 py-0.5 rounded-md';
+        }
+        if (!isRecordingVoice && micStatus) {
+          micStatus.textContent = 'Press Mic & Speak Your Emergency in English';
+        }
+      }
+
+      // If recognition is active, seamlessly restart with the newly selected language model
+      if (isRecordingVoice && speechRecognitionInstance) {
+        try {
+          speechRecognitionInstance.stop(); // onend will auto-restart with new lang
+        } catch (_) {}
+      }
+
+      if (!silent) {
+        showToast(voiceSpeakingLang === 'te' 
+          ? 'వాయిస్ మైక్: తెలుగు భాష సిద్ధం (Voice mic set to Telugu - te-IN)' 
+          : 'Voice mic set to English (en-IN)', 'info');
+      }
+    }
+
+    // Insert spoken phrase preset for quick victim intake
+    function insertSpokenPhrase(phrase) {
+      const reportInput = document.getElementById('sosReportText');
+      if (reportInput) {
+        reportInput.value = (reportInput.value ? reportInput.value + ' ' : '') + phrase;
+        speechFinalTranscript = reportInput.value;
+        updateCharCount();
+        runVoiceSituationRecognition(reportInput.value);
+        showToast('Spoken phrase loaded & analyzed: ' + phrase.slice(0, 30) + '...', 'success');
+      }
+    }
+
+    // Toggle Voice SOS recording and real-time speech recognition
     async function toggleVoiceSOS() {
       const micBtn = document.getElementById('voiceSosBtn');
       const micStatus = document.getElementById('voiceMicStatus');
+      const micRipple = document.getElementById('micRipple');
       const reportInput = document.getElementById('sosReportText');
 
       if (isRecordingVoice) {
-        // Stop recording
+        // ---- STOP RECORDING ----
         isRecordingVoice = false;
+        if (micRipple) micRipple.classList.add('hidden');
         if (speechRecognitionInstance) {
           try { speechRecognitionInstance.stop(); } catch (_) {}
         }
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop();
+          try { mediaRecorder.stop(); } catch (_) {}
         }
         if (audioStream) {
           audioStream.getTracks().forEach(t => t.stop());
@@ -2073,100 +2193,134 @@
 
         micBtn.classList.remove('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
         micBtn.classList.add('bg-white', 'text-orange-600', 'border-orange-500');
-        micStatus.textContent = currentLang === 'te' ? 'మైక్ నొక్కి మాట్లాడండి (Speak Now)' : 'Press Mic & Speak Your Emergency';
+        micStatus.textContent = voiceSpeakingLang === 'te'
+          ? 'మైక్ నొక్కి మాట్లాడండి (Press Mic & Speak)'
+          : 'Press Mic & Speak Your Emergency';
 
         // Trigger AI Situation Recognition on current text
-        if (reportInput.value.trim().length > 5) {
+        if (reportInput.value.trim().length > 3) {
           runVoiceSituationRecognition(reportInput.value.trim());
+          showToast('Antigravity AI situation recognition completed for voice report', 'success');
         }
         return;
       }
 
-      // Start recording
+      // ---- START RECORDING ----
+      // Preserve existing text so user does not lose previously typed notes
+      speechFinalTranscript = (reportInput.value || '').trim();
+
+      // 1. Audio stream & visualizer initialization
       try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        initAudioVisualizer(audioStream);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          initAudioVisualizer(audioStream);
 
-        // Also start MediaRecorder for Hugging Face audio upload
-        recordedAudioChunks = [];
-        try {
-          mediaRecorder = new MediaRecorder(audioStream);
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedAudioChunks.push(e.data);
-          };
-          mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' });
-            if (audioBlob.size > 1000) {
-              await processHuggingFaceAudio(audioBlob);
-            }
-          };
-          mediaRecorder.start(500);
-        } catch (_mrErr) {
-          console.warn('MediaRecorder not supported, using Web Speech API fallback.');
+          // Start MediaRecorder for Hugging Face audio upload
+          recordedAudioChunks = [];
+          try {
+            mediaRecorder = new MediaRecorder(audioStream);
+            mediaRecorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
+            };
+            mediaRecorder.onstop = async () => {
+              const audioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' });
+              if (audioBlob.size > 1000) {
+                await processHuggingFaceAudio(audioBlob);
+              }
+            };
+            mediaRecorder.start(500);
+          } catch (_mrErr) {
+            console.warn('MediaRecorder notice; Web Speech API will handle live transcription.');
+          }
         }
-
       } catch (err) {
-        console.warn('Microphone permission or hardware access notice:', err);
-        showToast('Microphone access needed. Please allow microphone permission.', 'warning');
+        console.warn('Microphone permission notice:', err);
+        showToast('Please allow microphone access when prompted by your browser.', 'warning');
       }
 
-      // Initialize Web Speech API for low-latency live transcription
+      // 2. Initialize Web Speech API for low-latency live transcription
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
+        if (speechRecognitionInstance) {
+          try { speechRecognitionInstance.abort(); } catch (_) {}
+        }
         speechRecognitionInstance = new SpeechRecognition();
         speechRecognitionInstance.continuous = true;
         speechRecognitionInstance.interimResults = true;
-        speechRecognitionInstance.lang = currentLang === 'te' ? 'te-IN' : 'en-IN';
+        speechRecognitionInstance.lang = voiceSpeakingLang === 'te' ? 'te-IN' : 'en-IN';
 
         speechRecognitionInstance.onstart = () => {
           isRecordingVoice = true;
+          if (micRipple) micRipple.classList.remove('hidden');
           micBtn.classList.add('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
           micBtn.classList.remove('bg-white', 'text-orange-600', 'border-orange-500');
-          micStatus.textContent = currentLang === 'te'
-            ? 'వింటూ ఉన్నాం... మీ అత్యవసర సమస్యను చెప్పండి (Listening...)'
-            : 'Listening... Speak your emergency in Telugu or English now';
+          micStatus.textContent = voiceSpeakingLang === 'te'
+            ? 'వింటూ ఉన్నాం... తెలుగులో మాట్లాడండి (Listening in Telugu...)'
+            : 'Listening... Speak your emergency in English now';
         };
 
         speechRecognitionInstance.onresult = (event) => {
-          let transcript = '';
+          let interimTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
+            const piece = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              speechFinalTranscript += (speechFinalTranscript ? ' ' : '') + piece.trim();
+            } else {
+              interimTranscript += piece;
+            }
           }
-          if (transcript) {
-            reportInput.value = (reportInput.value ? reportInput.value + ' ' : '') + transcript;
+          const combined = [speechFinalTranscript, interimTranscript].filter(Boolean).join(' ').trim();
+          if (combined) {
+            reportInput.value = combined;
             updateCharCount();
-            // Live real-time situation recognition
-            runVoiceSituationRecognition(reportInput.value.trim());
+            // Live real-time situation recognition as victim speaks
+            runVoiceSituationRecognition(combined);
           }
         };
 
         speechRecognitionInstance.onerror = (event) => {
-          console.warn('Speech recognition event:', event.error);
+          console.warn('Speech recognition notice:', event.error);
           if (event.error === 'not-allowed') {
-            showToast('Microphone access denied. Please enable microphone in browser settings.', 'error');
-            toggleVoiceSOS();
+            showToast('Microphone access denied. Tap the lock icon in your browser address bar to allow mic.', 'error');
+            isRecordingVoice = false;
+            if (micRipple) micRipple.classList.add('hidden');
+            micBtn.classList.remove('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
+            micBtn.classList.add('bg-white', 'text-orange-600', 'border-orange-500');
+            micStatus.textContent = 'Microphone permission blocked. Please allow mic in browser settings.';
+          } else if (event.error === 'no-speech') {
+            micStatus.textContent = voiceSpeakingLang === 'te'
+              ? 'వాయిస్ వినపడలేదు... మైక్ దగ్గర మాట్లాడండి (Listening...)'
+              : 'No speech detected yet. Speak closer to mic...';
+          } else if (event.error === 'network') {
+            micStatus.textContent = 'Network speech notice. Recording locally for AI triage...';
           }
         };
 
         speechRecognitionInstance.onend = () => {
+          // If user did not manually stop, seamlessly restart listening
           if (isRecordingVoice) {
-            // Auto restart if still recording
-            try { speechRecognitionInstance.start(); } catch (_) {}
+            try {
+              speechRecognitionInstance.lang = voiceSpeakingLang === 'te' ? 'te-IN' : 'en-IN';
+              speechRecognitionInstance.start();
+            } catch (_) {}
           }
         };
 
         try {
           speechRecognitionInstance.start();
+          isRecordingVoice = true;
         } catch (e) {
           console.error('Speech recognition start failed:', e);
+          isRecordingVoice = true;
         }
       } else {
-        // Fallback when Web Speech API is absent (Firefox / Insecure context)
+        // Fallback for browsers without Web Speech API
         isRecordingVoice = true;
+        if (micRipple) micRipple.classList.remove('hidden');
         micBtn.classList.add('bg-red-600', 'text-white', 'mic-recording-pulse', 'border-red-600');
         micBtn.classList.remove('bg-white', 'text-orange-600', 'border-orange-500');
-        micStatus.textContent = 'Recording Audio... Press again when done to transcribe with AI';
-        showToast('Microphone recording active. Audio will be transcribed by Hugging Face AI.', 'info');
+        micStatus.textContent = 'Recording Voice Audio... Press mic again when done to transcribe';
+        showToast('Microphone active. Audio will be transcribed by Hugging Face AI.', 'info');
       }
     }
 
@@ -2192,6 +2346,7 @@
             const reportInput = document.getElementById('sosReportText');
             if (!reportInput.value || reportInput.value.length < 5) {
               reportInput.value = res.transcript;
+              speechFinalTranscript = res.transcript;
               updateCharCount();
             }
           }
@@ -2205,62 +2360,141 @@
     }
 
     // --- 10. VOICE-TO-EMERGENCY SITUATION RECOGNITION AI ---
+    // Multi-dialect Visakhapatnam crisis heuristic engine (Telugu Script + Tanglish + English)
     function analyzeSpeechSituationLocally(text) {
       const lower = text.toLowerCase();
 
-      let type = "Severe Flash Flooding & Stranded Victims";
+      let type = "Severe Flash Flooding & Stranded Coastal Victims";
       let urgency = "Critical";
       let category = "Flooding";
-      let responder = "NDRF 10th Bn & Marine Inflatable Boats";
+      let responder = "NDRF 10th Bn & Marine Police Inflatable Gemini Boats";
       let hospital = "King George Hospital (KGH), Maharanipeta";
-      let reassurance = "Stay calm on the highest concrete floor or terrace. Do not step into flowing water. NDRF rescue boat and 108 medical team notified.";
-      const immediateNeeds = ["NDRF Zodiac Boat", "Life Jackets", "108 Ambulance"];
+      let reassurance = "Stay calm on the highest concrete floor or terrace. Do not step into flowing floodwater. NDRF rescue boat and 108 medical team notified.";
+      const immediateNeeds = ["NDRF Zodiac Boat", "Life Jackets", "108 ALS Ambulance"];
 
-      if (lower.includes('heart') || lower.includes('cardiac') || lower.includes('chest') || lower.includes('blood') || lower.includes('రక్తం') || lower.includes('గుండె') || lower.includes('unconscious') || lower.includes('స్పృహ')) {
+      // 1. Critical Trauma & Cardiac / Blood / Unconscious / Snake Bite
+      if (
+        lower.includes('heart') || lower.includes('cardiac') || lower.includes('chest') ||
+        lower.includes('blood') || lower.includes('bleeding') || lower.includes('unconscious') ||
+        lower.includes('faint') || lower.includes('breath') || lower.includes('oxygen') ||
+        lower.includes('injury') || lower.includes('wound') || lower.includes('snake') ||
+        lower.includes('bite') || lower.includes('kgh') || lower.includes('ambulance') ||
+        lower.includes('రక్తం') || lower.includes('గుండె') || lower.includes('స్పృహ') ||
+        lower.includes('శ్వాస') || lower.includes('గాయం') || lower.includes('ఆసుపత్రి') ||
+        lower.includes('కేజీహెచ్') || lower.includes('అంబులెన్స్') || lower.includes('పాము') ||
+        lower.includes('gunde') || lower.includes('raktam') || lower.includes('spruha') ||
+        lower.includes('swasa') || lower.includes('gayam') || lower.includes('pamu')
+      ) {
         type = "Critical Trauma & Cardiac Emergency";
         urgency = "Critical";
         category = "Medical Emergency";
-        responder = "108 Advanced Life Support Ambulance";
+        responder = "108 Advanced Life Support Ambulance & KGH Trauma Cell";
         hospital = "King George Hospital (KGH) Trauma Center / CARE Hospital";
         reassurance = "Apply firm direct pressure to bleeding with clean cloth. Keep victim flat and warm. 108 Emergency Ambulance prioritized for your coordinates.";
         immediateNeeds.length = 0;
-        immediateNeeds.push("108 ALS Cardiac Ambulance", "Oxygen Supply", "KGH Trauma Admission");
-      } else if (lower.includes('wire') || lower.includes('cable') || lower.includes('current') || lower.includes('విద్యుత్') || lower.includes('వైరు') || lower.includes('shock')) {
+        immediateNeeds.push("108 ALS Cardiac Ambulance", "Oxygen Supply", "KGH Level-1 Trauma Admission");
+      }
+      // 2. High-Voltage Electric Wire / Current Shock / Transformer Blast
+      else if (
+        lower.includes('wire') || lower.includes('cable') || lower.includes('current') ||
+        lower.includes('electric') || lower.includes('shock') || lower.includes('spark') ||
+        lower.includes('transformer') || lower.includes('pole') ||
+        lower.includes('వైరు') || lower.includes('కరెంట్') || lower.includes('విద్యుత్') ||
+        lower.includes('షాక్') || lower.includes('నిప్పు') || lower.includes('ట్రాన్స్‌ఫార్మర్') ||
+        lower.includes('vairu') || lower.includes('current shock')
+      ) {
         type = "Fallen High-Voltage Live Electrical Cable";
         urgency = "High";
         category = "Roadblock & Fallen Trees";
         responder = "APEPDCL Grid Isolation Emergency Squad";
         hospital = "KGH Burn Unit, Maharanipeta";
-        reassurance = "Stay at least 15 meters away from the wire and standing water. Warn nearby citizens. Power isolation crew alerted.";
+        reassurance = "Stay at least 15 meters away from the live wire and standing water. Warn nearby citizens. APEPDCL power isolation crew alerted.";
         immediateNeeds.length = 0;
         immediateNeeds.push("APEPDCL Power Isolation", "Road Debris Clearance");
-      } else if (lower.includes('water') || lower.includes('flood') || lower.includes('boat') || lower.includes('వరద') || lower.includes('నీరు') || lower.includes('బోటు') || lower.includes('roof')) {
-        type = "Severe Inundation & Stranded Rooftop Distress";
-        urgency = "Critical";
-        category = "Flooding";
-        responder = "NDRF 10th Bn & Coast Guard Inflatable Boats";
-        hospital = "King George Hospital (KGH) Casualty";
-        reassurance = "Stay on highest solid roof. Do not touch electrical switches. Signal with bright cloth or phone torch. Rescue boat dispatched.";
-        immediateNeeds.length = 0;
-        immediateNeeds.push("NDRF Inflatable Gemini Boat", "Drinking Water Cans", "Life Jackets");
-      } else if (lower.includes('pregnant') || lower.includes('labor') || lower.includes('baby') || lower.includes('infant') || lower.includes('గర్భిణీ') || lower.includes('శిశువు')) {
+      }
+      // 3. Emergency Childbirth & High-Risk Maternal / Infant Distress
+      else if (
+        lower.includes('pregnant') || lower.includes('pregnancy') || lower.includes('labor') ||
+        lower.includes('delivery') || lower.includes('baby') || lower.includes('infant') ||
+        lower.includes('newborn') || lower.includes('victoria') || lower.includes('ghosha') ||
+        lower.includes('గర్భిణీ') || lower.includes('డెలివరీ') || lower.includes('ప్రసవం') ||
+        lower.includes('నొప్పులు') || lower.includes('శిశువు') || lower.includes('బిడ్డ') ||
+        lower.includes('విక్టోరియా') || lower.includes('garbhini') || lower.includes('prasavam')
+      ) {
         type = "Emergency Childbirth & Infant Distress";
         urgency = "Critical";
         category = "Medical Emergency";
-        responder = "108 Obstetrics SAR Escort";
+        responder = "108 Obstetrics SAR Escort & Female EMTs";
         hospital = "Govt Victoria Hospital for Women & Children (Ghosha) / KGH";
         reassurance = "Keep mother lying down comfortably on clean bedding. Keep infant warm. Advanced obstetrics ambulance dispatched.";
         immediateNeeds.length = 0;
         immediateNeeds.push("Obstetrics Ambulance", "Baby Warmth Kit", "Victoria Hospital Maternity Admission");
-      } else if (lower.includes('food') || lower.includes('hungry') || lower.includes('drinking water') || lower.includes('తాగునీరు') || lower.includes('ఆహారం')) {
+      }
+      // 4. Critical Food & Potable Safe Drinking Water Shortage
+      else if (
+        lower.includes('food') || lower.includes('hungry') || lower.includes('starving') ||
+        lower.includes('drinking water') || lower.includes('thirsty') || lower.includes('milk') ||
+        lower.includes('ration') || lower.includes('packet') || lower.includes('meals') ||
+        lower.includes('ఆహారం') || lower.includes('తిండి') || lower.includes('ఆకలి') ||
+        lower.includes('తాగునీరు') || lower.includes('మంచినీళ్లు') || lower.includes('పాలు') ||
+        lower.includes('aakali') || lower.includes('tindi') || lower.includes('manchineellu')
+      ) {
         type = "Critical Food & Safe Potable Water Shortage";
         urgency = "High";
         category = "Food & Drinking Water";
-        responder = "GVMC Central Relief Supply Logistics";
+        responder = "GVMC Central Relief Supply Logistics & Red Cross";
         hospital = "KGH Community Health Cell";
         reassurance = "Do not drink untreated floodwater. Safe packaged water cans and GVMC dry ration kits are being dispatched to your sector.";
         immediateNeeds.length = 0;
         immediateNeeds.push("Packaged Safe Water (20L Cans)", "Dry Ration Kits", "ORS Packets");
+      }
+      // 5. Cyclone Gale / Fallen Trees / Roadblocks / Landslides (Simhachalam, Kailasagiri)
+      else if (
+        lower.includes('cyclone') || lower.includes('storm') || lower.includes('wind') ||
+        lower.includes('tree') || lower.includes('collapse') || lower.includes('wall') ||
+        lower.includes('landslide') || lower.includes('mudslide') || lower.includes('simhachalam') ||
+        lower.includes('kailasagiri') || lower.includes('తుఫాను') || lower.includes('గాలివాన') ||
+        lower.includes('చెట్టు') || lower.includes('కూలింది') || lower.includes('గోడ') ||
+        lower.includes('కొండచరియలు') || lower.includes('toofanu') || lower.includes('galivana') ||
+        lower.includes('kondachariyalu')
+      ) {
+        type = "Cyclone Gale Debris & Structure Compromise";
+        urgency = "High";
+        category = "Roadblock & Fallen Trees";
+        responder = "GVMC Disaster Response Force & JCB Earthmovers";
+        hospital = "SevenHills Hospital / VIMS Multi Speciality";
+        reassurance = "Stay inside reinforced concrete structures away from glass panes. Road clearance heavy equipment alerted.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("Power Saws for Tree Removal", "JCB Heavy Excavators", "Structural Shoring");
+      }
+      // 6. Default: Severe Flood & Inundation
+      else {
+        type = "Severe Inundation & Stranded Coastal Flood Distress";
+        urgency = "Critical";
+        category = "Flooding";
+        responder = "NDRF 10th Bn & Coast Guard Inflatable Gemini Boats";
+        hospital = "King George Hospital (KGH) Casualty";
+        reassurance = "Stay on highest solid roof. Do not touch electrical switches. Signal with bright cloth or phone torch. Rescue boat dispatched.";
+        immediateNeeds.length = 0;
+        immediateNeeds.push("NDRF Inflatable Gemini Boat", "Drinking Water Cans", "Life Jackets");
+      }
+
+      // Check for landmark detection in spoken text and suggest location
+      let suggestedLocation = "";
+      if (lower.includes('mvp') || lower.includes('colony')) {
+        suggestedLocation = "MVP Colony, Visakhapatnam";
+      } else if (lower.includes('beach') || lower.includes('jalaripeta') || lower.includes('rk beach')) {
+        suggestedLocation = "Jalaripeta / RK Beach Road, Visakhapatnam";
+      } else if (lower.includes('gajuwaka')) {
+        suggestedLocation = "Gajuwaka Industrial Belt, Visakhapatnam";
+      } else if (lower.includes('kgh') || lower.includes('maharanipeta')) {
+        suggestedLocation = "Maharanipeta, Near KGH, Visakhapatnam";
+      } else if (lower.includes('simhachalam')) {
+        suggestedLocation = "Simhachalam Foothills, Visakhapatnam";
+      } else if (lower.includes('madhurawada') || lower.includes('rushikonda')) {
+        suggestedLocation = "Madhurawada / Rushikonda, Visakhapatnam";
+      } else if (lower.includes('jagadamba')) {
+        suggestedLocation = "Jagadamba Junction, Visakhapatnam";
       }
 
       return {
@@ -2270,12 +2504,13 @@
         recommendedResponder: responder,
         recommendedHospital: hospital,
         reassurance,
-        immediateNeeds
+        immediateNeeds,
+        suggestedLocation
       };
     }
 
     function runVoiceSituationRecognition(text) {
-      if (!text || text.length < 5) return;
+      if (!text || text.length < 3) return;
       const situation = analyzeSpeechSituationLocally(text);
       applyRecognizedSituationToUI(situation);
     }
@@ -2284,7 +2519,10 @@
       if (!situation) return;
 
       const card = document.getElementById('aiSituationCard');
-      if (card) card.classList.remove('hidden');
+      if (card) {
+        card.classList.remove('hidden');
+        card.classList.add('animate-fadeIn');
+      }
 
       const titleEl = document.getElementById('aiSituationTitle');
       const urgencyEl = document.getElementById('aiSituationUrgency');
@@ -2292,6 +2530,7 @@
       const responderEl = document.getElementById('aiSituationResponder');
       const hospitalEl = document.getElementById('aiSituationHospital');
       const catSelect = document.getElementById('sosCategorySelect');
+      const locInput = document.getElementById('sosLocationText');
 
       if (titleEl) titleEl.textContent = situation.type;
       if (urgencyEl) {
@@ -2301,10 +2540,28 @@
       }
       if (reassuranceEl) reassuranceEl.textContent = situation.reassurance;
       if (responderEl) responderEl.textContent = situation.recommendedResponder;
-      if (hospitalEl) hospitalEl.textContent = situation.recommendedHospital;
+      
+      // If user has GPS location, dynamically append nearest hospital distance
+      if (hospitalEl) {
+        if (currentUserCoords && VIZAG_HOSPITALS && VIZAG_HOSPITALS.length > 0) {
+          let closest = VIZAG_HOSPITALS[0];
+          let minDist = 9999;
+          VIZAG_HOSPITALS.forEach(h => {
+            const d = calculateHaversineDistance(currentUserCoords.lat, currentUserCoords.lng, h.lat, h.lng);
+            if (d < minDist) { minDist = d; closest = h; }
+          });
+          hospitalEl.innerHTML = situation.recommendedHospital + ' <span class="text-orange-600 font-extrabold">(Nearest via Live GPS: ' + closest.name + ' - ' + minDist.toFixed(1) + ' km away)</span>';
+        } else {
+          hospitalEl.textContent = situation.recommendedHospital;
+        }
+      }
 
-      if (catSelect && situation.category && !catSelect.value) {
+      if (catSelect && situation.category && (!catSelect.value || catSelect.value === 'Flooding')) {
         catSelect.value = situation.category;
+      }
+
+      if (locInput && situation.suggestedLocation && !locInput.value) {
+        locInput.value = situation.suggestedLocation;
       }
     }
 
@@ -3007,6 +3264,8 @@
     window.closeMobileNav = closeMobileNav;
     window.resetSOSForm = resetSOSForm;
     window.triggerVoiceDirectly = triggerVoiceDirectly;
+    window.setVoiceSpeakingLanguage = setVoiceSpeakingLanguage;
+    window.insertSpokenPhrase = insertSpokenPhrase;
     window.triggerGPSImmediate = triggerGPSImmediate;
     window.sendOfflineSMS = sendOfflineSMS;
     window.openAntigravityModal = openAntigravityModal;
