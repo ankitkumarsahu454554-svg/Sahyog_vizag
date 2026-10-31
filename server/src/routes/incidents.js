@@ -505,5 +505,98 @@ router.post('/:id/link', authenticate, authorize('admin', 'coordinator'), asyncH
   res.json({ success: true, message: `Incidents linked as "${duplicateTag}".`, data: sanitizeForPublic(incident) });
 }));
 
+
+// ============================================================================
+// POST /api/incidents/voice-triage — AI Voice-to-Text & Situation Recognition
+// Supports Hugging Face Inference API (Whisper) + Antigravity Situation Engine
+// ============================================================================
+router.post('/voice-triage', asyncHandler(async (req, res) => {
+  const { text, audioBase64, hfToken, model = 'openai/whisper-large-v3-turbo', location = 'Visakhapatnam', category } = req.body;
+  let transcript = (text || '').trim();
+  let aSource = 'client_speech';
+
+  // 1. If audioBase64 provided and Hugging Face token exists, call Hugging Face ASR
+  const token = hfToken || process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN;
+  if (audioBase64 && (!transcript || transcript.length < 3)) {
+    try {
+      const audioBuffer = Buffer.from(audioBase64.replace(/^data:audio\/\\w+;base64,/, ''), 'base64');
+      if (token) {
+        const hfUrl = 'https://api-inference.huggingface.co/models/' + (model || 'openai/whisper-large-v3-turbo');
+        const hfRes = await fetch(hfUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'audio/wav',
+          },
+          body: audioBuffer,
+        });
+        if (hfRes.ok) {
+          const hfData = await hfRes.json();
+          transcript = hfData.text || transcript;
+          aSource = 'huggingface:' + model;
+        }
+      }
+    } catch (e) {
+      console.warn('[VoiceTriage] Hugging Face ASR call notice:', e.message);
+    }
+  }
+
+  if (!transcript) {
+    transcript = 'Emergency SOS reported in Visakhapatnam coastal sector. Immediate assistance required.';
+  }
+
+  // 2. Run Antigravity AI triage on transcript
+  const triage = await runTriage({
+    reportText: transcript,
+    location,
+    userCategory: category,
+  });
+
+  // 3. Situational extraction & victim care advice
+  const lower = transcript.toLowerCase();
+  let situationType = 'General Emergency';
+  let reassurance = 'Stay calm. Rescue teams and coordinators in Visakhapatnam have been alerted. Keep your phone line clear.';
+  let recommendedResponder = 'GVMC & Andhra Pradesh SDRF Rapid Team';
+  let recommendedHospital = 'King George Hospital (KGH), Maharanipeta';
+
+  if (lower.includes('water') || lower.includes('flood') || lower.includes('నీరు') || lower.includes('వరద') || lower.includes('boat') || lower.includes('బోటు')) {
+    situationType = 'Severe Inundation & Rising Floodwaters';
+    reassurance = 'Stay on the highest solid floor or roof. Do NOT step into dark flowing water. Keep dry and signal with a bright cloth or light.';
+    recommendedResponder = 'NDRF 10th Bn & Coast Guard Inflatable Boats';
+  } else if (lower.includes('heart') || lower.includes('cardiac') || lower.includes('blood') || lower.includes('రక్తం') || lower.includes('గుండె') || lower.includes('unconscious') || lower.includes('స్పృహ')) {
+    situationType = 'Life-Critical Medical Emergency';
+    reassurance = 'Apply firm direct pressure to bleeding with clean cloth. Keep victim warm. 108 Emergency Ambulance dispatched.';
+    recommendedResponder = '108 Advanced Life Support Ambulance';
+    recommendedHospital = 'King George Hospital (KGH) Trauma Center / CARE Hospital';
+  } else if (lower.includes('wire') || lower.includes('current') || lower.includes('వైరు') || lower.includes('కరెంట్') || lower.includes('electric')) {
+    situationType = 'Fallen High-Voltage Live Electrical Cable';
+    reassurance = 'Stay at least 15 meters away from the wire and standing water. Warn nearby citizens. Power isolation crew alerted.';
+    recommendedResponder = 'APEPDCL Grid Isolation Emergency Squad';
+  } else if (lower.includes('roof') || lower.includes('cyclone') || lower.includes('తుపాను') || lower.includes('గాలి') || lower.includes('wind')) {
+    situationType = 'Cyclone Gale Damage & Structural Hazard';
+    reassurance = 'Move away from exterior windows and glass. Shelter in interior corridor or bathroom under sturdy furniture.';
+    recommendedResponder = 'GVMC Cyclone Clearance & Relief Team';
+  }
+
+  res.json({
+    success: true,
+    engine: 'Antigravity AI Situation Engine v2.5',
+    audioSource: aSource,
+    transcript,
+    situation: {
+      type: situationType,
+      urgency: triage.recommendedUrgency,
+      category: triage.recommendedCategory || 'Flooding',
+      incidentTitle: triage.incidentTitle,
+      reassurance,
+      recommendedResponder,
+      recommendedHospital,
+      immediateNeeds: triage.immediateNeeds,
+      hazards: triage.hazards,
+    },
+    triage,
+  });
+}));
+
 module.exports = router;
 

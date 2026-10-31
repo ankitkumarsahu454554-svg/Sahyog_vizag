@@ -1,15 +1,18 @@
 /**
  * SahyogAI Production Service Worker (Offline-First Architecture)
+ * Visakhapatnam (Vizag), Andhra Pradesh — Disaster Emergency Grid
+ * Powered by Antigravity AI Engine
  * ----------------------------------------------------------------
  * Handles:
  *  1. App Shell Pre-Caching (Cache-First / Stale-While-Revalidate for UI assets)
  *  2. Smart Network-First with Cache Fallback for all GET /api/ requests
  *  3. Automatic Cache Versioning & Stale Cache Eviction on activate
  *  4. Background Sync & Client Broadcast on network state recovery
+ *  5. Offline emergency response synthetic fallback
  */
 
-const SHELL_CACHE_NAME = 'sahyog-shell-v3';
-const API_CACHE_NAME = 'sahyog-api-cache-v1';
+const SHELL_CACHE_NAME = 'sahyog-vizag-shell-v4';
+const API_CACHE_NAME = 'sahyog-vizag-api-cache-v2';
 
 // Static assets required for complete zero-connectivity app shell boot
 const SHELL_ASSETS = [
@@ -19,7 +22,7 @@ const SHELL_ASSETS = [
   '/offline/offlineDB.js',
   '/offline/syncEngine.js',
   '/offline/OfflineStatusBanner.js',
-  // Third-party CDN libraries cached for field autonomy
+  // Third-party CDN libraries cached for offline field autonomy
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -31,7 +34,6 @@ const SHELL_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE_NAME).then(async (cache) => {
-      // Robust asset-by-asset caching so single external CDN failure doesn't abort install
       const cachePromises = SHELL_ASSETS.map(async (url) => {
         try {
           const response = await fetch(url, { mode: url.startsWith('http') && !url.includes(self.location.hostname) ? 'cors' : 'same-origin' });
@@ -39,7 +41,7 @@ self.addEventListener('install', (event) => {
             await cache.put(url, response);
           }
         } catch (err) {
-          console.warn(`[SW] Pre-cache optional asset skipped (${url}):`, err.message);
+          console.warn(`[SW] Pre-cache asset skipped (${url}):`, err.message);
         }
       });
       await Promise.all(cachePromises);
@@ -71,7 +73,7 @@ self.addEventListener('fetch', (event) => {
 
   // SSE (Server-Sent Events) live streams cannot be cached
   if (url.pathname.includes('/api/events')) {
-    return; // Passthrough to browser native handling
+    return;
   }
 
   // A. GET API REQUESTS: Network-First with Cache Fallback
@@ -86,7 +88,6 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(async () => {
-          // Network failed or offline: query cached state
           const cachedResponse = await caches.match(request);
           if (cachedResponse) {
             const modifiedHeaders = new Headers(cachedResponse.headers);
@@ -104,6 +105,7 @@ self.addEventListener('fetch', (event) => {
               success: true,
               offlineFallback: true,
               data: [],
+              operationalSector: 'Visakhapatnam (Vizag), Andhra Pradesh',
               message: 'Operating in Antigravity offline mode. Displaying localized cache.',
             }),
             {
@@ -120,8 +122,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   // B. NON-GET REQUESTS (POST, PUT, PATCH, DELETE)
-  // Let them pass to the network. If network is down, the client-side
-  // syncEngine intercepts window.fetch, saves to IndexedDB outbox, and returns 202.
   if (request.method !== 'GET') {
     return;
   }
@@ -139,7 +139,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cached = await caches.match('/index.html') || await caches.match('/');
-          return cached || new Response('Offline Mode - Portal shell unavailable.', { status: 503 });
+          return cached || new Response('Offline Mode - Visakhapatnam Disaster Portal shell unavailable.', { status: 503 });
         })
     );
     return;

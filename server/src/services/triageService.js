@@ -1,16 +1,34 @@
 'use strict';
 
 /**
- * AI Triage Service — SahyogAI (Brahmapur, Ganjam, Odisha Deployment)
- * -------------------------------------------------------------------
- * Calls the Gemini API (server-side) with strict JSON schema.
- * Falls back transparently to a deterministic rule-based NLP engine.
- * Supports Odia (ଓଡ଼ିଆ), English, and phonetic regional disaster reports.
- * NEVER exposes the API key to the client.
+ * AI Triage Service — SahyogAI (Visakhapatnam, Andhra Pradesh Deployment)
+ * ------------------------------------------------------------------------
+ * Powered by Antigravity AI Engine & Hugging Face NLP / Whisper Pipeline
+ * Supports Telugu (తెలుగు), English, and Phonetic Regional Disaster Reports.
+ * Server-side Gemini API with strict JSON schema and deterministic rule fallback.
+ * NEVER exposes API keys to client.
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { URGENCY_LEVELS, CATEGORIES } = require('../models/Incident');
+let GoogleGenerativeAI = null;
+try {
+  GoogleGenerativeAI = require('@google/generative-ai').GoogleGenerativeAI;
+} catch (_) {}
+const URGENCY_LEVELS = ['Critical', 'High', 'Medium', 'Low'];
+const CATEGORIES = [
+  'Medical Emergency',
+  'Trapped / Missing People',
+  'Flooding',
+  'Fire',
+  'Food & Drinking Water',
+  'Shelter',
+  'Rescue Assistance',
+  'Transportation',
+  'Power Outage',
+  'Communication Failure',
+  'Sanitation',
+  'Roadblock & Fallen Trees',
+  'Other Emergency',
+];
 
 const TIMEOUT_MS = 12000; // 12-second hard limit
 
@@ -27,32 +45,35 @@ const SCHEMA_EXAMPLE = {
   missingInfo: ['<info 1>'],
   confidence: 'high | medium | low | uncertain',
   reasoning: '<brief explanation of urgency recommendation>',
-  detectedLanguage: 'en | or | te | mixed | unknown',
+  detectedLanguage: 'en | te | mixed | unknown',
 };
 
-const SYSTEM_PROMPT = `You are SahyogAI, an emergency disaster response triage AI deployed in Brahmapur (Berhampur), Ganjam District, Odisha, India.
-You assist trained emergency coordinators, ODRAF (Odisha Disaster Rapid Action Force), OSDMA, and BeMC (Berhampur Municipal Corporation) — you do NOT replace them.
+const SYSTEM_PROMPT = `You are SahyogAI Powered by Antigravity AI Engine, an emergency disaster response triage intelligence deployed in Visakhapatnam (Vizag), Andhra Pradesh, India.
+You assist trained emergency coordinators, APSDMA (Andhra Pradesh State Disaster Management Authority), GVMC (Greater Visakhapatnam Municipal Corporation), NDRF 10th Bn, and Indian Navy Eastern Naval Command (ENC) — you do NOT replace them.
 
-Key operational landmarks in this sector include:
-- MKCG Medical College & Hospital (apex tertiary healthcare)
-- Gopalpur Sea Beach & Port (coastal storm surge corridor)
-- Rushikulya River basin (Ganjam flood zone)
-- Kamapalli, Tata Benz Square, Gate Bazaar, Gosaninuagaon, Old Bus Stand, Bada Bazaar, Khallikote Unitary University.
+Key operational landmarks in Visakhapatnam include:
+- King George Hospital (KGH) — apex government super-speciality & emergency trauma center (Maharanipeta, Beach Road)
+- Visakha Institute of Medical Sciences (VIMS, Hanumanthavaka)
+- Apollo Hospitals & CARE Hospitals (Health City Arilova / Ramnagar)
+- SevenHills Hospital & Medicover MVP Colony
+- Ramakrishna (RK) Beach & Coastal Beach Road corridor (cyclone storm surge corridor)
+- Visakhapatnam Port, Naval Dockyard & Eastern Naval Command
+- Jagadamba Junction, MVP Colony, Gajuwaka Industrial Hub, Madhurawada, Rushikonda, Simhachalam, Pendurthi.
 
 Your task is to analyze an incoming emergency SOS report and return a structured JSON triage assessment.
 
 URGENCY LEVELS (choose one):
-- Critical: Immediate threat to life, severe injury, people trapped, drowning, cardiac emergency, fire, active childbirth / blocked labor, snakebite, live snapped electric wires in water, imminent structural collapse.
-- High: Significant risk, deteriorating situation, vulnerable populations (elderly, infants, pregnant women), essential medical needs (insulin, dialysis, oxygen), contaminated shelter water.
-- Medium: Serious but stable situation, essential food/drinking water shortage, infrastructure damage without immediate life threat.
+- Critical: Immediate threat to life, severe trauma, drowning in floodwaters/beach, cardiac emergency, fire/gas leak, active childbirth in distress, snakebite, live snapped electric wires in water, trapped under collapsed roof.
+- High: Significant risk, deteriorating situation, vulnerable populations (elderly, infants, pregnant women), essential medical needs (insulin, dialysis, oxygen), roof blow-off during cyclone.
+- Medium: Serious but stable situation, essential food/drinking water shortage, urban waterlogging without immediate drowning threat.
 - Low: Minor property damage, road blockage with alternate bypass available, general informational inquiries.
 
 SAFETY RULES:
 - Do NOT downgrade urgency solely because a formal keyword is absent.
-- Treat reports of trapped people, terrace stranded victims, drowning, flood entering homes, blood, unconsciousness, fire, or live snapped cables as at least High urgency.
+- Treat reports of trapped people, rooftop stranded victims, flood entering homes, heavy bleeding, unconsciousness, fire, live electric lines, or coastal storm surge as at least High or Critical urgency.
 - If uncertain, lean toward higher urgency and set confidence to "uncertain".
 - Do NOT invent names, locations, injuries, or numbers not stated in the report.
-- The report may be in Odia (ଓଡ଼ିଆ script or phonetic English), English, or mixed. Understand the emergency context deeply.
+- The report may be in Telugu (తెలుగు script or phonetic English), English, or mixed.
 
 VALID CATEGORIES: ${CATEGORIES.join(' | ')}
 
@@ -81,32 +102,33 @@ function sanitizeAIOutput(obj) {
     missingInfo: Array.isArray(obj.missingInfo) ? obj.missingInfo.map(String).slice(0, 6) : [],
     confidence: ['high', 'medium', 'low', 'uncertain'].includes(obj.confidence) ? obj.confidence : 'uncertain',
     reasoning: typeof obj.reasoning === 'string' ? obj.reasoning.slice(0, 1000) : '',
-    detectedLanguage: ['en', 'or', 'te', 'mixed', 'unknown'].includes(obj.detectedLanguage) ? obj.detectedLanguage : 'unknown',
+    detectedLanguage: ['en', 'te', 'mixed', 'unknown'].includes(obj.detectedLanguage) ? obj.detectedLanguage : 'unknown',
   };
 }
 
-// ── Rule-based fallback (Brahmapur, Odisha emergency vocabulary) ──────────────
+// ── Rule-based fallback (Visakhapatnam, Andhra Pradesh emergency vocabulary) ──
 function ruleFallback(reportText, location, userCategory, affectedCountRange) {
-  const lower = reportText.toLowerCase();
+  const lower = (reportText || '').toLowerCase();
 
-  // Critical triggers (English, Odia Unicode, and Phonetic Odia/Tanglish)
+  // Critical triggers (English, Telugu Unicode, and Phonetic Telugu / Tanglish)
   const criticalPatterns = [
     // English
     'trapped', 'trap', 'unconscious', 'not breathing', 'heart attack', 'cardiac',
     'drowning', 'drown', 'bleeding heavily', 'blood', 'fire', 'burning', 'burn',
     'collapse', 'collapsed', 'labor', 'labour', 'childbirth', 'ambulance',
     'critical', 'dying', 'died', 'dead', 'terrace', 'rooftop stranded', 'snakebite',
-    'electric wire', 'live cable', 'snapped wire',
-    // Odia Unicode
-    'ପାଣି ପଶିଗଲା', 'ପାଣି ବଢୁଛି', 'ଡଙ୍ଗା ପଠାନ୍ତୁ', 'ଡଙ୍ଗା ଦରକାର', 'ବୁଡ଼ି ଯାଉଛନ୍ତି',
-    'ଛାତ ଉପରେ', 'ଅଚେତ', 'ରକ୍ତ ବୋହୁଛି', 'ଜରୁରୀ', 'ଚିକିତ୍ସା ଦରକାର', 'ବିଦ୍ୟୁତ ତାର',
-    'ଭୁଶୁଡ଼ି ପଡ଼ିଲା', 'ମରିଯିବେ', 'ରକ୍ଷା କରନ୍ତୁ', 'ଶୀଘ୍ର ଆସନ୍ତୁ', 'ସାପ କାମୁଡ଼ିଲା',
-    // Phonetic Odia
-    'pani pasigala', 'pani badhuchi', 'danga pathantu', 'danga darkar', 'budi jauchanti',
-    'chata upare', 'acchet', 'rakta', 'emergency', 'rescue karantu', 'raksha karantu',
-    'sapa kamudila', 'bidyut tara', 'current wire', 'mkcg', 'immediately',
-    // Telugu support (Southern Odisha / Ganjam border)
-    'neellu', 'velu', 'water rising', 'munchaindi', 'chanipoindi', 'boat pampandi',
+    'electric wire', 'live cable', 'snapped wire', 'gas leak', 'suffocation',
+    'tsunami', 'high tide', 'storm surge', 'sea water entered',
+    // Telugu Unicode
+    'నీరు చేరింది', 'వరద', 'బోటు పంపండి', 'బోటు కావాలి', 'మునిగిపోతున్నారు',
+    'పైకప్పు మీద', 'స్పృహ లేదు', 'రక్తం కారుతోంది', 'అత్యవసరం', 'వైద్య సహాయం',
+    'కరెంట్ వైరు', 'కూలిపోయింది', 'చనిపోతారు', 'కాపాడండి', 'త్వరగా రండి',
+    'పాము కాటు', 'గుండె నొప్పి', 'గ్యాస్ లీక్', 'తుఫాను', 'ఆసుపత్రి', 'కె.జి.హెచ్',
+    // Phonetic Telugu / Tanglish
+    'neellu cherindi', 'neellu perigipoyayi', 'varadha', 'boat pampandi', 'boat kavali',
+    'munigipotunnam', 'roof meeda', 'chikkukunnam', 'spruha ledu', 'raktham',
+    'emergency', 'rescue cheyandi', 'kapadandi', 'pamu katu', 'current wire tegindi',
+    'electric cable', 'kgh hospital', 'twaraga randi', 'gunde noppi', 'gas leak'
   ];
 
   const highPatterns = [
@@ -114,13 +136,15 @@ function ruleFallback(reportText, location, userCategory, affectedCountRange) {
     'water', 'flood', 'flooded', 'inundation', 'elderly', 'senior', 'infant',
     'baby', 'pregnant', 'diabetic', 'insulin', 'medicine', 'bp medicine',
     'no food', 'no water', 'drinking water', 'shelter needed', 'roof damaged',
-    'power cut', 'no electricity', 'cyclone', 'missing', 'storm surge',
-    // Odia Unicode
-    'ବନ୍ୟା', 'ପାନୀୟ ଜଳ', 'ଖାଦ୍ୟ ନାହିଁ', 'ଗର୍ଭବତୀ', 'ଶିଶୁ', 'ବୟସ୍କ', 'ଇନସୁଲିନ',
-    'ଔଷଧ', 'ରାସ୍ତା ବନ୍ଦ', 'ଗଛ ପଡ଼ିଛି', 'କରେଣ୍ଟ ନାହିଁ', 'ବାତ୍ୟା', 'ଭଙ୍ଗା ଘର', 'ସାହାଯ୍ୟ',
-    // Phonetic Odia
-    'vanya', 'khadya nahi', 'pani nahi', 'garbhabati', 'shishu', 'bayaska',
-    'aushadha', 'rasta banda', 'gacha padichi', 'current nahi', 'batya', 'help', 'save',
+    'power cut', 'no electricity', 'cyclone', 'missing', 'storm surge', 'tree fell',
+    // Telugu Unicode
+    'వరదలు', 'తాగునీరు', 'ఆహారం లేదు', 'గర్భిణీ', 'చిన్న పిల్లలు', 'వృద్ధులు',
+    'ఇన్సులిన్', 'మందులు', 'రహదారి బంద్', 'చెట్టు పడిపోయింది', 'కరెంట్ లేదు',
+    'తుపాను', 'ఇల్లు దెబ్బతింది', 'సహాయం కావాలి',
+    // Phonetic Telugu
+    'varadhalu', 'aaharam ledu', 'neellu levu', 'taguneeru', 'garbhini', 'pillalu',
+    'vruddhulu', 'mandulu kavali', 'road block', 'chettu padipoyindi', 'current ledu',
+    'cyclone', 'shelter kavali', 'sahayam'
   ];
 
   const hasCritical = criticalPatterns.some(p => lower.includes(p));
@@ -135,39 +159,37 @@ function ruleFallback(reportText, location, userCategory, affectedCountRange) {
   // Category detection
   let category = userCategory;
   if (!CATEGORIES.includes(category)) {
-    if (lower.includes('water') || lower.includes('flood') || lower.includes('ବନ୍ୟା') || lower.includes('ପାଣି')) category = 'Flooding';
-    else if (lower.includes('fire') || lower.includes('burn') || lower.includes('ନିଆଁ')) category = 'Fire';
-    else if (lower.includes('trapped') || lower.includes('missing') || lower.includes('ଫସି') || lower.includes('ଛାତ')) category = 'Trapped / Missing People';
-    else if (lower.includes('food') || lower.includes('ration') || lower.includes('ଖାଦ୍ୟ') || lower.includes('ଜଳ')) category = 'Food & Drinking Water';
-    else if (lower.includes('medicine') || lower.includes('hospital') || lower.includes('doctor') || lower.includes('ଡାକ୍ତର') || lower.includes('mkcg')) category = 'Medical Emergency';
+    if (lower.includes('water') || lower.includes('flood') || lower.includes('వరద') || lower.includes('నీరు') || lower.includes('surge')) category = 'Flooding';
+    else if (lower.includes('fire') || lower.includes('burn') || lower.includes('నిప్పు') || lower.includes('మంటలు') || lower.includes('gas')) category = 'Fire';
+    else if (lower.includes('trapped') || lower.includes('missing') || lower.includes('చిక్కు') || lower.includes('పైకప్పు') || lower.includes('roof')) category = 'Trapped / Missing People';
+    else if (lower.includes('food') || lower.includes('ration') || lower.includes('ఆహారం') || lower.includes('తాగునీరు') || lower.includes('water')) category = 'Food & Drinking Water';
+    else if (lower.includes('medicine') || lower.includes('hospital') || lower.includes('doctor') || lower.includes('వైద్యం') || lower.includes('kgh') || lower.includes('ఆసుపత్రి')) category = 'Medical Emergency';
+    else if (lower.includes('tree') || lower.includes('road') || lower.includes('చెట్టు') || lower.includes('రహదారి')) category = 'Roadblock & Fallen Trees';
     else category = 'Other Emergency';
   }
 
-  // Immediate needs
+  // Immediate needs customized for Visakhapatnam disaster infrastructure
   const needs = [];
-  if (lower.includes('boat') || lower.includes('ଡଙ୍ଗା') || lower.includes('danga')) needs.push('ODRAF / Rescue Boat');
-  if (lower.includes('insulin') || lower.includes('medicine') || lower.includes('bp') || lower.includes('ଔଷଧ') || lower.includes('snakebite')) needs.push('Emergency Medicines / Antiserum kit');
-  if (lower.includes('food') || lower.includes('ration') || lower.includes('ଖାଦ୍ୟ') || lower.includes('chuda')) needs.push('Dry Food Packets (Chuda/Gur)');
-  if (lower.includes('water') || lower.includes('ପାଣି') || lower.includes('ଜଳ')) needs.push('Drinking Water (20L Cans)');
-  if (lower.includes('shelter') || lower.includes('roof') || lower.includes('ପାଲ')) needs.push('Tarpaulin / Temporary Shelter');
-  if (lower.includes('ambulance') || lower.includes('hospital') || lower.includes('mkcg')) needs.push('Ambulance to MKCG Hospital');
-  if (lower.includes('electric') || lower.includes('wire') || lower.includes('ତାର')) needs.push('TPCODL Power Isolation Crew');
-  if (needs.length === 0) needs.push('Rapid Field Assessment Team');
+  if (lower.includes('boat') || lower.includes('బోటు') || lower.includes('flood') || lower.includes('వరద')) needs.push('NDRF / Navy Inflatable Rescue Boat');
+  if (lower.includes('insulin') || lower.includes('medicine') || lower.includes('bp') || lower.includes('మందులు') || lower.includes('snakebite')) needs.push('Critical Medicines / Antivenom Kit to KGH');
+  if (lower.includes('food') || lower.includes('ration') || lower.includes('ఆహారం') || lower.includes('rice')) needs.push('GVMC Relief Food Packets & Ready Meals');
+  if (lower.includes('water') || lower.includes('తాగునీరు') || lower.includes('నీరు')) needs.push('Packaged Drinking Water (20L Cans)');
+  if (lower.includes('shelter') || lower.includes('roof') || lower.includes('పైకప్పు') || lower.includes('cyclone')) needs.push('Cyclone Shelter Tarpaulin & Dry Bedding');
+  if (lower.includes('ambulance') || lower.includes('hospital') || lower.includes('kgh') || lower.includes('ఆసుపత్రి')) needs.push('108 Advanced Life Support Ambulance to KGH Vizag');
+  if (lower.includes('electric') || lower.includes('wire') || lower.includes('కరెంట్') || lower.includes('వైరు')) needs.push('APEPDCL Power Isolation & Restoration Crew');
+  if (needs.length === 0) needs.push('GVMC / SDRF Rapid Field Assessment Team');
 
   // Language detection
-  const odiaChars = /[\u0B00-\u0B7F]/;
   const teluguChars = /[\u0C00-\u0C7F]/;
   const hasEnglish = /[a-zA-Z]/.test(reportText);
-  const hasOdia = odiaChars.test(reportText);
   const hasTelugu = teluguChars.test(reportText);
 
   let lang = 'unknown';
-  if (hasOdia && hasEnglish) lang = 'mixed';
-  else if (hasOdia) lang = 'or';
+  if (hasTelugu && hasEnglish) lang = 'mixed';
   else if (hasTelugu) lang = 'te';
   else if (hasEnglish) lang = 'en';
 
-  const summary = `Emergency in Brahmapur/Ganjam sector at ${location}. ${reportText.slice(0, 140)}${reportText.length > 140 ? '...' : ''}`;
+  const summary = `Visakhapatnam Emergency Sector at ${location}. ${reportText.slice(0, 140)}${reportText.length > 140 ? '...' : ''}`;
   const title = `${category.split('/')[0].trim()} — ${location.split(',')[0].trim()}`.slice(0, 80);
 
   return {
@@ -177,17 +199,17 @@ function ruleFallback(reportText, location, userCategory, affectedCountRange) {
     summary,
     affectedCount: null,
     immediateNeeds: needs,
-    hazards: hasCritical ? ['Imminent life-safety hazard or rising floodwaters reported'] : [],
+    hazards: hasCritical ? ['Imminent life-safety hazard or rising coastal floodwaters reported'] : [],
     recommendedNextSteps: [
-      'Ganjam Control Room / BeMC Coordinator to verify incident via registered phone.',
-      'Dispatch nearest ODRAF / Fire Services or volunteer unit from Brahmapur Hub.',
+      'Visakhapatnam EOC / GVMC Coordinator to verify incident via registered phone.',
+      'Dispatch nearest NDRF 10th Bn / 108 Ambulance / Coast Guard unit in Vizag sector.',
     ],
     missingInfo: [
       'Exact head count of vulnerable persons (infants/elderly) pending confirmation.',
-      'Water ingress depth and route accessibility status to be verified by field scout.',
+      'Water ingress depth and street accessibility status to be verified by field scout.',
     ],
     confidence: 'medium',
-    reasoning: `Rule-based fallback classification for Brahmapur sector. Category: ${category}. Urgency set to ${urgency} based on high-risk disaster keywords. Coordinator review recommended.`,
+    reasoning: `Antigravity AI Rule-based heuristic classification for Visakhapatnam sector. Category: ${category}. Urgency set to ${urgency} based on high-risk disaster keywords. Coordinator review recommended.`,
     detectedLanguage: lang,
   };
 }
@@ -197,7 +219,7 @@ async function runTriage({ reportText, location, userCategory, affectedCountRang
   const startMs = Date.now();
 
   // Attempt Gemini call only if key is configured
-  if (process.env.GEMINI_API_KEY) {
+  if (process.env.GEMINI_API_KEY && GoogleGenerativeAI) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({
@@ -205,11 +227,11 @@ async function runTriage({ reportText, location, userCategory, affectedCountRang
         generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
       });
 
-      const userPrompt = `Operational Sector: Brahmapur (Berhampur), Ganjam District, Odisha
+      const userPrompt = `Operational Sector: Visakhapatnam (Vizag), Andhra Pradesh, India
 Location: "${location}"
 Reported category: "${userCategory || 'Not specified'}"
 Estimated people affected: "${affectedCountRange || 'Unknown'}"
-Emergency report (may be in Odia ଓଡ଼ିଆ, English, or phonetic Tanglish/Odia):
+Emergency report (may be in Telugu తెలుగు, English, or phonetic Tanglish/Telugu):
 """
 ${reportText}
 """`;
@@ -246,7 +268,7 @@ ${reportText}
       };
 
     } catch (err) {
-      console.warn('[TriageService] Gemini failed, using rule-based fallback:', err.message);
+      console.warn('[TriageService] Gemini failed, using Antigravity AI rule-based fallback:', err.message);
     }
   }
 
@@ -255,11 +277,11 @@ ${reportText}
   return {
     ...fallback,
     source: 'fallback',
-    model: 'rule-based-odisha-v2',
+    model: 'antigravity-vizag-v2.5',
     processedAt: new Date(),
     processingMs: Date.now() - startMs,
     rawResponse: null,
   };
 }
 
-module.exports = { runTriage };
+module.exports = { runTriage, ruleFallback };

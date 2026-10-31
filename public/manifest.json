@@ -1,22 +1,21 @@
 {
-  "name": "SahyogAI",
-  "short_name": "SahyogAI",
-  "description": "AI-Powered Disaster Response and Relief Coordination — Visakhapatnam",
+  "name": "SahyogAI Vizag — AI Disaster Relief & Response",
+  "short_name": "SahyogAI Vizag",
+  "description": "AI-Powered Emergency Response, Voice SOS, Offline Triage & Hospital Locator for Visakhapatnam, Andhra Pradesh. Powered by Antigravity AI Engine.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F172A",
   "theme_color": "#EA580C",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23EA580C'/><text y='.9em' font-size='80' x='10'>⚡</text></svg>",
-      "sizes": "any",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23EA580C'/><text y='.88em' font-size='75' x='12'>⚡</text></svg>",
+      "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["utilities", "productivity"],
-  "lang": "en",
+  "categories": ["utilities", "medical", "productivity"],
+  "lang": "en-IN",
   "dir": "ltr"
 }
-

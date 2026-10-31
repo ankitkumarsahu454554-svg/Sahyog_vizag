@@ -1,6 +1,7 @@
 """
-SahyogAI Disaster Management Platform - Production Entrypoint for Vercel
-Serves the Brahmapur, Odisha Crisis Portal.
+SahyogAI Disaster Management Platform - Production Entrypoint
+Serves the Visakhapatnam (Vizag), Andhra Pradesh Crisis Portal.
+Powered by Antigravity AI Engine.
 """
 import os
 import mimetypes

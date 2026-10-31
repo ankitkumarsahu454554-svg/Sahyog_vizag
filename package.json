@@ -1,7 +1,7 @@
 {
-  "name": "sahyogai",
+  "name": "sahyogai-vizag",
   "version": "1.0.0",
-  "description": "SahyogAI - AI-Powered Disaster Response & Relief Coordination (Brahmapur, Odisha)",
+  "description": "SahyogAI - AI-Powered Disaster Response & Relief Coordination (Visakhapatnam, Andhra Pradesh) Powered by Antigravity AI Engine",
   "main": "server/src/app.js",
   "scripts": {
     "start": "node server/src/app.js",
